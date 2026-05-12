@@ -37,6 +37,7 @@ namespace xiaoliran.Pages
                     HttpContext.Session.SetString("UserId", user.Id.ToString());
                     HttpContext.Session.SetString("UserName", user.Username);
                     HttpContext.Session.SetString("RealName", user.RealName);
+                    HttpContext.Session.SetString("Gender", user.Gender);
                     return RedirectToPage("/Dashboard");
                 }
 

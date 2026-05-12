@@ -1,6 +1,7 @@
 @{
     var userName = Context.Session.GetString("UserName") ?? "";
     var userRealName = Context.Session.GetString("RealName") ?? "";
+    var userGender = Context.Session.GetString("Gender") ?? "男";
     var initial = userRealName.Length > 0 ? userRealName.Substring(0, 1) : "?";
 }
 <!DOCTYPE html>
@@ -13,6 +14,7 @@
     <link rel="stylesheet" href="~/css/app.css" asp-append-version="true" />
 </head>
 <body>
+    <div id="userGender" data-gender="@userGender" style="display:none"></div>
     <div class="app-container">
         <aside class="sidebar">
             <div class="sidebar-header">
@@ -61,12 +63,44 @@
                     <h2 class="page-title">@ViewData["Title"]</h2>
                 </div>
                 <div class="top-bar-right">
-                    <a class="user-avatar" asp-page="/Personal" title="个人信息">
-                        <div class="avatar-circle">
-                            @initial
+                    <div class="user-menu">
+                        <a class="user-avatar" href="javascript:void(0);" id="userAvatarBtn" title="个人信息">
+                            <div class="avatar-circle">
+                                @initial
+                            </div>
+                            <span class="user-name">@userRealName</span>
+                        </a>
+                        <div class="profile-popup" id="profilePopup">
+                            <div class="profile-popup-header">
+                                <span>个人信息</span>
+                                <button class="profile-popup-close" id="profilePopupClose">&times;</button>
+                            </div>
+                            <div class="profile-popup-body">
+                                <form id="profileForm" method="post" asp-page="/Personal">
+                                    <div class="form-row">
+                                        <label>用户名</label>
+                                        <input type="text" value="@userName" readonly class="form-readonly" id="popupUsername" />
+                                    </div>
+                                    <div class="form-row">
+                                        <label>姓名</label>
+                                        <input type="text" name="RealName" value="@userRealName" class="form-input" id="popupRealName" />
+                                    </div>
+                                    <div class="form-row">
+                                        <label>性别</label>
+                                        <div class="form-radio-group">
+                                            <label class="form-radio"><input type="radio" name="Gender" value="男" checked /> 男</label>
+                                            <label class="form-radio"><input type="radio" name="Gender" value="女" /> 女</label>
+                                        </div>
+                                    </div>
+                                    <div class="form-row">
+                                        <label>密码</label>
+                                        <input type="password" name="Password" placeholder="不修改请留空" class="form-input" id="popupPassword" />
+                                    </div>
+                                    <button type="submit" class="btn-popup-save">保存</button>
+                                </form>
+                            </div>
                         </div>
-                        <span class="user-name">@userRealName</span>
-                    </a>
+                    </div>
                 </div>
             </header>
             <div class="content-area">
@@ -77,6 +111,60 @@
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
+    <div id="appToast" class="app-toast" style="display:none;"></div>
+    <script>
+        // Profile popup toggle
+        document.getElementById('userAvatarBtn').addEventListener('click', function() {
+            var popup = document.getElementById('profilePopup');
+            var gender = document.getElementById('userGender').getAttribute('data-gender');
+            popup.style.display = popup.style.display === 'block' ? 'none' : 'block';
+            // Set gender radio
+            var radios = popup.querySelectorAll('input[name="Gender"]');
+            radios.forEach(function(r) { r.checked = r.value === gender; });
+        });
+        document.getElementById('profilePopupClose').addEventListener('click', function() {
+            document.getElementById('profilePopup').style.display = 'none';
+        });
+        document.addEventListener('click', function(e) {
+            var popup = document.getElementById('profilePopup');
+            var btn = document.getElementById('userAvatarBtn');
+            if (!popup.contains(e.target) && e.target !== btn && !btn.contains(e.target)) {
+                popup.style.display = 'none';
+            }
+        });
+        // AJAX form submit
+        document.getElementById('profileForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            var form = this;
+            var formData = new FormData(form);
+            fetch(form.action || '/Personal', {
+                method: 'POST',
+                body: formData,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(function(r) { return r.json(); }).then(function(data) {
+                if (data.success) {
+                    // Update avatar display
+                    document.querySelector('.user-name').textContent = data.realName || '';
+                    document.querySelector('.avatar-circle').textContent = data.initial || '?';
+                    document.getElementById('userGender').setAttribute('data-gender', data.gender || '男');
+                    // Close popup
+                    document.getElementById('profilePopup').style.display = 'none';
+                    // Show toast
+                    showToast(data.message || '保存成功', true);
+                } else {
+                    showToast(data.message || '保存失败', false);
+                }
+            }).catch(function() {
+                showToast('服务异常，请稍后重试', false);
+            });
+        });
+        function showToast(msg, success) {
+            var toast = document.getElementById('appToast');
+            toast.textContent = msg;
+            toast.className = 'app-toast show ' + (success ? 'app-toast-success' : 'app-toast-error');
+            setTimeout(function() { toast.className = 'app-toast'; }, 2500);
+        }
+    </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>
 </html>

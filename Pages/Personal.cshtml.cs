@@ -74,6 +74,21 @@ namespace xiaoliran.Pages
             await _db.SaveChangesAsync();
 
             HttpContext.Session.SetString("RealName", RealName);
+            HttpContext.Session.SetString("Gender", Gender);
+
+            var initial = RealName.Length > 0 ? RealName.Substring(0, 1) : "?";
+
+            if (Request.Headers.ContainsKey("X-Requested-With"))
+            {
+                return new JsonResult(new
+                {
+                    success = true,
+                    message = "保存成功",
+                    realName = RealName,
+                    initial = initial,
+                    gender = Gender
+                });
+            }
 
             Message = "保存成功";
             IsSuccess = true;
