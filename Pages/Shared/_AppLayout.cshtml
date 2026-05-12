@@ -76,7 +76,7 @@
                                 <button class="profile-popup-close" id="profilePopupClose">&times;</button>
                             </div>
                             <div class="profile-popup-body">
-                                <form id="profileForm" method="post" asp-page="/Personal">
+                                <form id="profileForm" method="post" action="/Personal">
                                     <div class="form-row">
                                         <label>用户名</label>
                                         <input type="text" value="@userName" readonly class="form-readonly" id="popupUsername" />
@@ -161,8 +161,9 @@
         function showToast(msg, success) {
             var toast = document.getElementById('appToast');
             toast.textContent = msg;
+            toast.style.display = '';
             toast.className = 'app-toast show ' + (success ? 'app-toast-success' : 'app-toast-error');
-            setTimeout(function() { toast.className = 'app-toast'; }, 2500);
+            setTimeout(function() { toast.className = 'app-toast'; }, 3000);
         }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
