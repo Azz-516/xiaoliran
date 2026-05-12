@@ -1,0 +1,99 @@
+@page
+@model xiaoliran.Pages.DashboardModel
+@{
+    ViewData["Title"] = "首页";
+    Layout = "/Pages/Shared/_AppLayout.cshtml";
+}
+
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+            </svg>
+        </div>
+        <div class="stat-value">128</div>
+        <div class="stat-label">注册用户</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon blue">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+        </div>
+        <div class="stat-value">36</div>
+        <div class="stat-label">洗衣门店</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"/>
+            </svg>
+        </div>
+        <div class="stat-value">582</div>
+        <div class="stat-label">待处理订单</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+        </div>
+        <div class="stat-value">¥12,680</div>
+        <div class="stat-label">本月营收</div>
+    </div>
+</div>
+
+<div class="card-main">
+    <div class="card-main-header">
+        <h3>最近订单</h3>
+    </div>
+    <div class="card-main-body">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>订单号</th>
+                    <th>用户</th>
+                    <th>衣物类型</th>
+                    <th>门店</th>
+                    <th>状态</th>
+                    <th>下单时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>#ORD-20260513-001</td>
+                    <td>张三</td>
+                    <td>西装干洗</td>
+                    <td>东校区店</td>
+                    <td><span class="badge-status pending">待取件</span></td>
+                    <td>2026-05-13 09:30</td>
+                </tr>
+                <tr>
+                    <td>#ORD-20260513-002</td>
+                    <td>李四</td>
+                    <td>羽绒服水洗</td>
+                    <td>西校区店</td>
+                    <td><span class="badge-status washing">洗涤中</span></td>
+                    <td>2026-05-13 10:15</td>
+                </tr>
+                <tr>
+                    <td>#ORD-20260512-003</td>
+                    <td>王五</td>
+                    <td>衬衫熨烫</td>
+                    <td>南校区店</td>
+                    <td><span class="badge-status done">已完成</span></td>
+                    <td>2026-05-12 14:20</td>
+                </tr>
+                <tr>
+                    <td>#ORD-20260512-004</td>
+                    <td>赵六</td>
+                    <td>鞋子清洗</td>
+                    <td>东校区店</td>
+                    <td><span class="badge-status delivered">已送达</span></td>
+                    <td>2026-05-12 16:45</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

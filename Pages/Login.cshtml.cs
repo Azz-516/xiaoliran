@@ -34,7 +34,10 @@ namespace xiaoliran.Pages
 
                 if (user != null && user.Password == Password)
                 {
-                    return RedirectToPage("/Index");
+                    HttpContext.Session.SetString("UserId", user.Id.ToString());
+                    HttpContext.Session.SetString("UserName", user.Username);
+                    HttpContext.Session.SetString("RealName", user.RealName);
+                    return RedirectToPage("/Dashboard");
                 }
 
                 ErrorMessage = "用户名或密码错误";

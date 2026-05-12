@@ -1,0 +1,90 @@
+@page
+@model xiaoliran.Pages.LaundryShopModel
+@{
+    ViewData["Title"] = "洗衣店管理";
+    Layout = "/Pages/Shared/_AppLayout.cshtml";
+}
+
+<div class="dashboard-grid">
+    <div class="stat-card">
+        <div class="stat-icon purple">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+            </svg>
+        </div>
+        <div class="stat-value">36</div>
+        <div class="stat-label">门店总数</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon green">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+        </div>
+        <div class="stat-value">32</div>
+        <div class="stat-label">营业中</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-icon orange">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
+                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        </div>
+        <div class="stat-value">4</div>
+        <div class="stat-label">装修中</div>
+    </div>
+</div>
+
+<div class="card-main">
+    <div class="card-main-header">
+        <h3>门店列表</h3>
+    </div>
+    <div class="card-main-body">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>门店编号</th>
+                    <th>门店名称</th>
+                    <th>地址</th>
+                    <th>负责人</th>
+                    <th>联系电话</th>
+                    <th>状态</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>#LS-001</td>
+                    <td>东校区洗衣店</td>
+                    <td>东校区生活区A栋1层</td>
+                    <td>王师傅</td>
+                    <td>138****5678</td>
+                    <td><span class="badge-status done">营业中</span></td>
+                </tr>
+                <tr>
+                    <td>#LS-002</td>
+                    <td>西校区洗衣店</td>
+                    <td>西校区商业街B座2层</td>
+                    <td>李师傅</td>
+                    <td>139****1234</td>
+                    <td><span class="badge-status done">营业中</span></td>
+                </tr>
+                <tr>
+                    <td>#LS-003</td>
+                    <td>南校区洗衣店</td>
+                    <td>南校区食堂旁</td>
+                    <td>张师傅</td>
+                    <td>137****9012</td>
+                    <td><span class="badge-status done">营业中</span></td>
+                </tr>
+                <tr>
+                    <td>#LS-004</td>
+                    <td>北校区洗衣店</td>
+                    <td>北校区体育馆东侧</td>
+                    <td>赵师傅</td>
+                    <td>136****3456</td>
+                    <td><span class="badge-status pending">装修中</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

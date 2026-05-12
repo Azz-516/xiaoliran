@@ -26,6 +26,8 @@ namespace xiaoliran
                 builder.Host.UseSerilog();
 
                 builder.Services.AddRazorPages();
+                builder.Services.AddHttpContextAccessor();
+                builder.Services.AddSession();
 
                 builder.Services.AddDbContext<AppDbContext>(options =>
                     options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=cleandb;Trusted_Connection=True;TrustServerCertificate=True;"));
@@ -45,7 +47,9 @@ namespace xiaoliran
                 }
 
                 app.UseHttpsRedirection();
+                app.UseStaticFiles();
                 app.UseRouting();
+                app.UseSession();
                 app.UseAuthorization();
 
                 app.MapStaticAssets();

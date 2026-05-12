@@ -1,0 +1,64 @@
+@page
+@model xiaoliran.Pages.PersonalModel
+@{
+    ViewData["Title"] = "个人信息";
+    Layout = "/Pages/Shared/_AppLayout.cshtml";
+}
+
+@if (!string.IsNullOrEmpty(Model.Message))
+{
+    <div class="alert @(Model.IsSuccess ? "alert-success" : "alert-danger") alert-dismissible fade show" role="alert">
+        @Model.Message
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<div class="personal-container">
+    <div class="card-main">
+        <div class="card-main-header">
+            <h3>个人资料</h3>
+        </div>
+        <div class="card-main-body">
+            <form method="post">
+                <div class="info-group">
+                    <div class="info-label">用户名</div>
+                    <div class="info-value">
+                        <input type="text" value="@Model.Username" readonly />
+                    </div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">姓名</div>
+                    <div class="info-value">
+                        <input asp-for="RealName" placeholder="请输入姓名" />
+                    </div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">性别</div>
+                    <div class="info-value" style="display:flex;gap:20px;align-items:center;">
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="radio" name="Gender" value="男" checked="@(Model.Gender == "男")" />
+                            <span>男</span>
+                        </label>
+                        <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+                            <input type="radio" name="Gender" value="女" checked="@(Model.Gender == "女")" />
+                            <span>女</span>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="info-group">
+                    <div class="info-label">密码</div>
+                    <div class="info-value">
+                        <input asp-for="Password" type="password" placeholder="不修改请留空" />
+                    </div>
+                </div>
+
+                <div style="display:flex;gap:12px;margin-top:28px;">
+                    <button type="submit" class="btn-primary-app">保存修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
