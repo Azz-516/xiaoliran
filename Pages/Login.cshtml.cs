@@ -34,10 +34,27 @@ namespace xiaoliran.Pages
 
                 if (user != null && user.Password == Password)
                 {
+                    var roleKeys = await (
+                        from ur in _db.UserRoles
+                        join r in _db.Roles on ur.RoleId equals r.Id
+                        where ur.UserId == user.Id
+                        select r.RoleKey
+                    ).ToListAsync();
+
+                    var permissionKeys = await (
+                        from rp in _db.RolePermissions
+                        join p in _db.Permissions on rp.PermissionId equals p.Id
+                        join ur in _db.UserRoles on rp.RoleId equals ur.RoleId
+                        where ur.UserId == user.Id
+                        select p.PermissionKey
+                    ).ToListAsync();
+
                     HttpContext.Session.SetString("UserId", user.Id.ToString());
                     HttpContext.Session.SetString("UserName", user.Username);
                     HttpContext.Session.SetString("RealName", user.RealName);
                     HttpContext.Session.SetString("Gender", user.Gender);
+                    HttpContext.Session.SetString("UserRoles", string.Join(",", roleKeys));
+                    HttpContext.Session.SetString("UserPermissions", string.Join(",", permissionKeys));
                     return RedirectToPage("/Dashboard");
                 }
 

@@ -1,0 +1,175 @@
+@page
+@model xiaoliran.Pages.UserManagementModel
+@{
+    ViewData["Title"] = "用户管理";
+    Layout = "/Pages/Shared/_AppLayout.cshtml";
+}
+
+<div class="card-main">
+    <div class="card-main-header">
+        <h3>用户列表</h3>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <form method="get" style="display:flex;gap:8px;">
+                <input type="text" name="searchKey" value="@Model.SearchKey" placeholder="搜索用户名或姓名" class="form-input" style="width:200px;" />
+                <button type="submit" class="btn-primary-app">搜索</button>
+            </form>
+            <button class="btn-add" onclick="showAddModal()">+ 新增用户</button>
+        </div>
+    </div>
+    <div class="card-main-body">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>用户名</th>
+                    <th>姓名</th>
+                    <th>性别</th>
+                    <th>注册时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Users.Count == 0)
+                {
+                    <tr><td colspan="5" style="text-align:center;color:#a0aec0;">暂无用户数据</td></tr>
+                }
+                else
+                {
+                    @foreach (var user in Model.Users)
+                    {
+                        <tr>
+                            <td>@user.Username</td>
+                            <td>@user.RealName</td>
+                            <td>@user.Gender</td>
+                            <td>@user.CreateTime</td>
+                            <td>
+                                <div class="crud-actions">
+                                    <button class="btn-edit" onclick="showEditModal(@user.Id, '@user.Username', '@user.RealName', '@user.Gender')">编辑</button>
+                                    <button class="btn-delete" onclick="confirmDelete(@user.Id, '@user.Username')">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="pagination">
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                <a class="page-link @(i == Model.CurrentPage ? "active" : "")" href="javascript:void(0)" onclick="goUserPage(@i)">@i</a>
+            }
+        </div>
+    }
+</div>
+
+<!-- Add User Modal -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-content">
+        <h3>新增用户</h3>
+        <form id="addForm">
+            <div class="form-row">
+                <label>用户名</label>
+                <input type="text" name="Username" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>密码</label>
+                <input type="password" name="Password" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>姓名</label>
+                <input type="text" name="RealName" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>性别</label>
+                <div class="form-radio-group">
+                    <label class="form-radio"><input type="radio" name="Gender" value="男" checked /> 男</label>
+                    <label class="form-radio"><input type="radio" name="Gender" value="女" /> 女</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-app" onclick="closeAddModal()">取消</button>
+                <button type="submit" class="btn-primary-app">确认添加</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content">
+        <h3>编辑用户</h3>
+        <form id="editForm">
+            <input type="hidden" name="Id" id="editId" />
+            <div class="form-row">
+                <label>用户名</label>
+                <input type="text" id="editUsername" class="form-readonly" readonly />
+            </div>
+            <div class="form-row">
+                <label>姓名</label>
+                <input type="text" name="RealName" id="editRealName" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>性别</label>
+                <div class="form-radio-group">
+                    <label class="form-radio"><input type="radio" name="Gender" value="男" checked /> 男</label>
+                    <label class="form-radio"><input type="radio" name="Gender" value="女" /> 女</label>
+                </div>
+            </div>
+            <div class="form-row">
+                <label>新密码（不修改请留空）</label>
+                <input type="password" name="Password" class="form-input" />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-app" onclick="closeEditModal()">取消</button>
+                <button type="submit" class="btn-primary-app">保存修改</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function showAddModal() { document.getElementById('addModal').classList.add('show'); }
+    function closeAddModal() { document.getElementById('addModal').classList.remove('show'); document.getElementById('addForm').reset(); }
+    function showEditModal(id, username, realName, gender) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editUsername').value = username;
+        document.getElementById('editRealName').value = realName;
+        document.getElementById('editModal').classList.add('show');
+        document.querySelectorAll('#editModal input[name="Gender"]').forEach(function(r) { r.checked = r.value === gender; });
+    }
+    function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }
+    function goUserPage(p) {
+        var path = window.location.pathname;
+        var params = new URLSearchParams(window.location.search);
+        params.set('page', p);
+        window.location.href = path + '?' + params.toString();
+    }
+    document.getElementById('addForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var fd = new FormData(this);
+        fetch('?handler=Add', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); }).then(function(data) {
+                if (data.success) { location.reload(); } else { alert(data.message); }
+            });
+    });
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var fd = new FormData(this);
+        fetch('?handler=Edit', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); }).then(function(data) {
+                if (data.success) { location.reload(); } else { alert(data.message); }
+            });
+    });
+    function confirmDelete(id, username) {
+        if (confirm('确定要删除用户 "' + username + '" 吗？此操作不可恢复。')) {
+            fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) { location.reload(); } else { alert(data.message); }
+                });
+        }
+    }
+    document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) closeAddModal(); });
+    document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEditModal(); });
+</script>

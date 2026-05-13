@@ -61,6 +61,22 @@ namespace xiaoliran.Pages
             _db.TbUsers.Add(user);
             await _db.SaveChangesAsync();
 
+            // Assign default 'user' role
+            var userRoleId = await _db.Roles
+                .Where(r => r.RoleKey == "user")
+                .Select(r => r.Id)
+                .FirstOrDefaultAsync();
+
+            if (userRoleId > 0)
+            {
+                _db.UserRoles.Add(new UserRole
+                {
+                    UserId = user.Id,
+                    RoleId = userRoleId
+                });
+                await _db.SaveChangesAsync();
+            }
+
             Message = "注册成功，即将跳转登录页";
             IsSuccess = true;
             return RedirectToPage("/Login");

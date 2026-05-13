@@ -1,90 +1,225 @@
 @page
 @model xiaoliran.Pages.LaundryShopModel
 @{
-    ViewData["Title"] = "洗衣店管理";
+    ViewData["Title"] = "门店管理";
     Layout = "/Pages/Shared/_AppLayout.cshtml";
 }
-
-<div class="dashboard-grid">
-    <div class="stat-card">
-        <div class="stat-icon purple">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
-                <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-            </svg>
-        </div>
-        <div class="stat-value">36</div>
-        <div class="stat-label">门店总数</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon green">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
-            </svg>
-        </div>
-        <div class="stat-value">32</div>
-        <div class="stat-label">营业中</div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon orange">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="24" height="24">
-                <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-            </svg>
-        </div>
-        <div class="stat-value">4</div>
-        <div class="stat-label">装修中</div>
-    </div>
-</div>
 
 <div class="card-main">
     <div class="card-main-header">
         <h3>门店列表</h3>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <form method="get" style="display:flex;gap:8px;">
+                <input type="text" name="searchKey" value="@Model.SearchKey" placeholder="搜索门店名称或地址" class="form-input" style="width:200px;" />
+                <select name="statusFilter" class="form-input" style="width:120px;">
+                    <option value="">全部状态</option>
+                    @if (Model.StatusFilter == "营业中")
+                    {
+                        <option value="营业中" selected>营业中</option>
+                        <option value="已停业">已停业</option>
+                    }
+                    else if (Model.StatusFilter == "已停业")
+                    {
+                        <option value="营业中">营业中</option>
+                        <option value="已停业" selected>已停业</option>
+                    }
+                    else
+                    {
+                        <option value="营业中">营业中</option>
+                        <option value="已停业">已停业</option>
+                    }
+                </select>
+                <button type="submit" class="btn-primary-app">搜索</button>
+            </form>
+            <button class="btn-add" onclick="showAddModal()">+ 新增门店</button>
+        </div>
     </div>
     <div class="card-main-body">
         <table class="data-table">
             <thead>
                 <tr>
-                    <th>门店编号</th>
                     <th>门店名称</th>
                     <th>地址</th>
-                    <th>负责人</th>
+                    <th>联系人</th>
                     <th>联系电话</th>
+                    <th>营业时间</th>
                     <th>状态</th>
+                    <th>操作</th>
                 </tr>
             </thead>
             <tbody>
-                <tr>
-                    <td>#LS-001</td>
-                    <td>东校区洗衣店</td>
-                    <td>东校区生活区A栋1层</td>
-                    <td>王师傅</td>
-                    <td>138****5678</td>
-                    <td><span class="badge-status done">营业中</span></td>
-                </tr>
-                <tr>
-                    <td>#LS-002</td>
-                    <td>西校区洗衣店</td>
-                    <td>西校区商业街B座2层</td>
-                    <td>李师傅</td>
-                    <td>139****1234</td>
-                    <td><span class="badge-status done">营业中</span></td>
-                </tr>
-                <tr>
-                    <td>#LS-003</td>
-                    <td>南校区洗衣店</td>
-                    <td>南校区食堂旁</td>
-                    <td>张师傅</td>
-                    <td>137****9012</td>
-                    <td><span class="badge-status done">营业中</span></td>
-                </tr>
-                <tr>
-                    <td>#LS-004</td>
-                    <td>北校区洗衣店</td>
-                    <td>北校区体育馆东侧</td>
-                    <td>赵师傅</td>
-                    <td>136****3456</td>
-                    <td><span class="badge-status pending">装修中</span></td>
-                </tr>
+                @if (Model.Shops.Count == 0)
+                {
+                    <tr><td colspan="7" style="text-align:center;color:#a0aec0;">暂无门店数据</td></tr>
+                }
+                else
+                {
+                    @foreach (var shop in Model.Shops)
+                    {
+                        <tr>
+                            <td>@shop.Name</td>
+                            <td>@shop.Address</td>
+                            <td>@shop.ContactPerson</td>
+                            <td>@shop.ContactPhone</td>
+                            <td>@shop.BusinessHours</td>
+                            <td><span class="shop-status-badge @(shop.Status == "营业中" ? "status-open" : "status-closed")">@shop.Status</span></td>
+                            <td>
+                                <div class="crud-actions">
+                                    <button class="btn-edit" onclick="showEditModal(@shop.Id, '@shop.Name', '@shop.Address', '@shop.ContactPhone', '@(shop.ContactPerson ?? "")', '@shop.Status', '@(shop.BusinessHours ?? "")', '@(shop.Description ?? "")')">编辑</button>
+                                    <button class="btn-delete" onclick="confirmDelete(@shop.Id, '@shop.Name')">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
             </tbody>
         </table>
     </div>
+    @if (Model.TotalPages > 1)
+    {
+        <div class="pagination">
+            @for (var i = 1; i <= Model.TotalPages; i++)
+            {
+                <a class="page-link @(i == Model.CurrentPage ? "active" : "")" href="javascript:void(0)" onclick="goShopPage(@i)">@i</a>
+            }
+        </div>
+    }
 </div>
+
+<!-- Add Modal -->
+<div class="modal-overlay" id="addModal">
+    <div class="modal-content" style="max-width:560px;">
+        <h3>新增门店</h3>
+        <form id="addForm">
+            <div class="form-row">
+                <label>门店名称</label>
+                <input type="text" name="Name" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>地址</label>
+                <input type="text" name="Address" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>联系电话</label>
+                <input type="text" name="ContactPhone" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>联系人</label>
+                <input type="text" name="ContactPerson" class="form-input" />
+            </div>
+            <div class="form-row">
+                <label>营业时间</label>
+                <input type="text" name="BusinessHours" class="form-input" placeholder="例：08:00-20:00" />
+            </div>
+            <div class="form-row">
+                <label>状态</label>
+                <div class="form-radio-group">
+                    <label class="form-radio"><input type="radio" name="Status" value="营业中" checked /> 营业中</label>
+                    <label class="form-radio"><input type="radio" name="Status" value="已停业" /> 已停业</label>
+                </div>
+            </div>
+            <div class="form-row">
+                <label>描述</label>
+                <textarea name="Description" class="form-input" rows="2" placeholder="门店描述"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-app" onclick="closeAddModal()">取消</button>
+                <button type="submit" class="btn-primary-app">确认添加</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-overlay" id="editModal">
+    <div class="modal-content" style="max-width:560px;">
+        <h3>编辑门店</h3>
+        <form id="editForm">
+            <input type="hidden" name="Id" id="editId" />
+            <div class="form-row">
+                <label>门店名称</label>
+                <input type="text" name="Name" id="editName" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>地址</label>
+                <input type="text" name="Address" id="editAddress" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>联系电话</label>
+                <input type="text" name="ContactPhone" id="editContactPhone" class="form-input" required />
+            </div>
+            <div class="form-row">
+                <label>联系人</label>
+                <input type="text" name="ContactPerson" id="editContactPerson" class="form-input" />
+            </div>
+            <div class="form-row">
+                <label>营业时间</label>
+                <input type="text" name="BusinessHours" id="editBusinessHours" class="form-input" />
+            </div>
+            <div class="form-row">
+                <label>状态</label>
+                <div class="form-radio-group">
+                    <label class="form-radio"><input type="radio" name="Status" value="营业中" checked /> 营业中</label>
+                    <label class="form-radio"><input type="radio" name="Status" value="已停业" /> 已停业</label>
+                </div>
+            </div>
+            <div class="form-row">
+                <label>描述</label>
+                <textarea name="Description" class="form-input" id="editDescription" rows="2"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-app" onclick="closeEditModal()">取消</button>
+                <button type="submit" class="btn-primary-app">保存修改</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function showAddModal() { document.getElementById('addModal').classList.add('show'); }
+    function closeAddModal() { document.getElementById('addModal').classList.remove('show'); document.getElementById('addForm').reset(); }
+    function showEditModal(id, name, address, phone, contact, status, hours, description) {
+        document.getElementById('editId').value = id;
+        document.getElementById('editName').value = name;
+        document.getElementById('editAddress').value = address;
+        document.getElementById('editContactPhone').value = phone;
+        document.getElementById('editContactPerson').value = contact;
+        document.getElementById('editBusinessHours').value = hours;
+        document.getElementById('editDescription').value = description || '';
+        document.getElementById('editModal').classList.add('show');
+        document.querySelectorAll('#editModal input[name="Status"]').forEach(function(r) { r.checked = r.value === status; });
+    }
+    function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }
+    function goShopPage(p) {
+        var path = window.location.pathname;
+        var params = new URLSearchParams(window.location.search);
+        params.set('page', p);
+        window.location.href = path + '?' + params.toString();
+    }
+    document.getElementById('addForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var fd = new FormData(this);
+        fetch('?handler=Add', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); }).then(function(data) {
+                if (data.success) { location.reload(); } else { alert(data.message); }
+            });
+    });
+    document.getElementById('editForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var fd = new FormData(this);
+        fetch('?handler=Edit', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); }).then(function(data) {
+                if (data.success) { location.reload(); } else { alert(data.message); }
+            });
+    });
+    function confirmDelete(id, name) {
+        if (confirm('确定要删除门店 "' + name + '" 吗？此操作不可恢复。')) {
+            fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) { location.reload(); } else { alert(data.message); }
+                });
+        }
+    }
+    document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) closeAddModal(); });
+    document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEditModal(); });
+</script>

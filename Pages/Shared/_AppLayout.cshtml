@@ -2,6 +2,8 @@
     var userName = Context.Session.GetString("UserName") ?? "";
     var userRealName = Context.Session.GetString("RealName") ?? "";
     var userGender = Context.Session.GetString("Gender") ?? "男";
+    var userPermissions = Context.Session.GetString("UserPermissions") ?? "";
+    var userRoles = Context.Session.GetString("UserRoles") ?? "";
     var initial = userRealName.Length > 0 ? userRealName.Substring(0, 1) : "?";
 }
 <!DOCTYPE html>
@@ -33,18 +35,30 @@
                     </svg>
                     <span>首页</span>
                 </a>
-                <a class="nav-item @(Context.Request.Path == "/LaundryShop" ? "active" : "")" asp-page="/LaundryShop">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
-                    </svg>
-                    <span>洗衣店管理</span>
-                </a>
-                <a class="nav-item @(Context.Request.Path == "/Clothing" ? "active" : "")" asp-page="/Clothing">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
-                        <path d="M20.38 3.46L16 2 12 3.46 8 2 3.62 3.46a2 2 0 0 0-1.34 2.23l.58 3.47a1 1 0 0 0 .99.84H6v10c0 1.1.9 2 2 2h8a2 2 0 0 0 2-2V10h2.15a1 1 0 0 0 .99-.84l.58-3.47a2 2 0 0 0-1.34-2.23z"/>
-                    </svg>
-                    <span>衣服管理</span>
-                </a>
+                @if (userRoles.Contains("admin"))
+                {
+                    <a class="nav-item @(Context.Request.Path == "/UserManagement" ? "active" : "")" asp-page="/UserManagement">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        </svg>
+                        <span>用户管理</span>
+                    </a>
+                    <a class="nav-item @(Context.Request.Path == "/LaundryShop" ? "active" : "")" asp-page="/LaundryShop">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                            <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        </svg>
+                        <span>门店管理</span>
+                    </a>
+                }
+                @if (userRoles.Contains("user"))
+                {
+                    <a class="nav-item @(Context.Request.Path == "/MyOrders" ? "active" : "")" asp-page="/MyOrders">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        <span>我的订单</span>
+                    </a>
+                }
             </nav>
             <div class="sidebar-footer">
                 <form asp-page="/Logout" method="post" id="logoutForm">

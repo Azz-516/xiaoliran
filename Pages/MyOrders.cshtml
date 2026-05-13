@@ -1,0 +1,63 @@
+@page
+@model xiaoliran.Pages.MyOrdersModel
+@{
+    ViewData["Title"] = "我的订单";
+    Layout = "/Pages/Shared/_AppLayout.cshtml";
+}
+
+<div class="card-main">
+    <div class="card-main-header">
+        <h3>我的订单</h3>
+    </div>
+    <div class="card-main-body">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>订单号</th>
+                    <th>门店</th>
+                    <th>服务类型</th>
+                    <th>衣物类型</th>
+                    <th>费用</th>
+                    <th>状态</th>
+                    <th>下单时间</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Orders.Count == 0)
+                {
+                    <tr><td colspan="7" style="text-align:center;color:#a0aec0;">暂无订单</td></tr>
+                }
+                else
+                {
+                    @foreach (var order in Model.Orders)
+                    {
+                        <tr>
+                            <td>@order.OrderNo</td>
+                            <td>@order.ShopName</td>
+                            <td>@order.ServiceType</td>
+                            <td>@order.ClothingType</td>
+                            <td>¥@order.EstimatedCost.ToString("F2")</td>
+                            <td><span class="badge-status @(GetOrderBadgeClass(order.Status))">@order.Status</span></td>
+                            <td>@order.CreateTime</td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@functions {
+    public static string GetOrderBadgeClass(string status)
+    {
+        return status switch
+        {
+            "待取件" => "pending",
+            "待清洗" => "washing",
+            "洗涤中" => "washing",
+            "已完成" => "done",
+            "已送达" => "delivered",
+            _ => "pending"
+        };
+    }
+}
