@@ -137,34 +137,16 @@
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>
     <div id="appToast" class="app-toast" style="display:none;"></div>
+    <div id="confirmDialog" class="modal-overlay" style="display:none;">
+        <div class="modal-content">
+            <h3 id="confirmMessage"></h3>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-app" id="confirmCancel">取消</button>
+                <button type="button" class="btn-primary-app" id="confirmOk">确认</button>
+            </div>
+        </div>
+    </div>
     <script>
-        function showToast(msg, successOrOptions, durationOrOptions) {
-            var toast = document.getElementById('appToast');
-            toast.textContent = msg;
-            toast.style.display = '';
-            toast.className = 'app-toast show';
-
-            var options = {};
-            if (typeof successOrOptions === 'object') {
-                options = successOrOptions;
-            } else {
-                options.success = successOrOptions !== false;
-            }
-            var duration = (typeof durationOrOptions === 'number') ? durationOrOptions : (typeof options === 'object' && typeof options.duration === 'number' ? options.duration : 3000);
-            var success = options.success !== false;
-            var type = options.type || (success ? 'success' : 'error');
-
-            toast.classList.add('show');
-            if (type === 'success') toast.classList.add('app-toast-success');
-            else if (type === 'error') toast.classList.add('app-toast-error');
-            else if (type === 'info') toast.classList.add('app-toast-info');
-            else if (type === 'warning') toast.classList.add('app-toast-warning');
-
-            setTimeout(function() {
-                toast.className = 'app-toast';
-                setTimeout(function() { toast.style.display = 'none'; }, 300);
-            }, duration);
-        }
         // Profile popup toggle
         document.getElementById('userAvatarBtn').addEventListener('click', function() {
             var popup = document.getElementById('profilePopup');
@@ -210,13 +192,6 @@
                 showToast('服务异常，请稍后重试', false);
             });
         });
-        function showToast(msg, success) {
-            var toast = document.getElementById('appToast');
-            toast.textContent = msg;
-            toast.style.display = '';
-            toast.className = 'app-toast show ' + (success ? 'app-toast-success' : 'app-toast-error');
-            setTimeout(function() { toast.className = 'app-toast'; }, 3000);
-        }
     </script>
     @await RenderSectionAsync("Scripts", required: false)
 </body>

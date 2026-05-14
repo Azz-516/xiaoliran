@@ -1,4 +1,75 @@
-﻿// Please see documentation at https://learn.microsoft.com/aspnet/core/client-side/bundling-and-minification
-// for details on configuring this project to bundle and minify static web assets.
+// Toast notification
+function showToast(msg, successOrOptions, durationOrOptions) {
+    var toast = document.getElementById('appToast');
+    if (!toast) return;
+    toast.textContent = msg;
+    toast.style.display = '';
+    toast.className = 'app-toast show';
 
-// Write your JavaScript code.
+    var options = {};
+    if (typeof successOrOptions === 'object') {
+        options = successOrOptions;
+    } else {
+        options.success = successOrOptions !== false;
+    }
+    var duration = (typeof durationOrOptions === 'number') ? durationOrOptions : (typeof options === 'object' && typeof options.duration === 'number' ? options.duration : 3000);
+    var success = options.success !== false;
+    var type = options.type || (success ? 'success' : 'error');
+
+    toast.classList.add('show');
+    if (type === 'success') toast.classList.add('app-toast-success');
+    else if (type === 'error') toast.classList.add('app-toast-error');
+    else if (type === 'info') toast.classList.add('app-toast-info');
+    else if (type === 'warning') toast.classList.add('app-toast-warning');
+
+    setTimeout(function () {
+        toast.className = 'app-toast';
+        setTimeout(function () { toast.style.display = 'none'; }, 300);
+    }, duration);
+}
+
+// Confirm dialog
+var confirmCallback = null;
+function showConfirmDialog(message, callback) {
+    var dialog = document.getElementById('confirmDialog');
+    var msgEl = document.getElementById('confirmMessage');
+    if (!dialog || !msgEl) return;
+    msgEl.textContent = message;
+    dialog.classList.add('show');
+    confirmCallback = callback;
+}
+
+function closeConfirmDialog() {
+    var dialog = document.getElementById('confirmDialog');
+    if (dialog) {
+        dialog.classList.remove('show');
+    }
+    confirmCallback = null;
+}
+
+// Initialize confirm dialog buttons
+document.addEventListener('DOMContentLoaded', function () {
+    var confirmCancel = document.getElementById('confirmCancel');
+    var confirmOk = document.getElementById('confirmOk');
+    var confirmDialog = document.getElementById('confirmDialog');
+
+    if (confirmCancel) {
+        confirmCancel.addEventListener('click', function () {
+            closeConfirmDialog();
+        });
+    }
+    if (confirmOk) {
+        confirmOk.addEventListener('click', function () {
+            closeConfirmDialog();
+            if (confirmCallback) confirmCallback();
+            confirmCallback = null;
+        });
+    }
+    if (confirmDialog) {
+        confirmDialog.addEventListener('click', function (e) {
+            if (e.target === this) {
+                closeConfirmDialog();
+            }
+        });
+    }
+});

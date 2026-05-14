@@ -45,7 +45,7 @@
                             <td>@user.CreateTime</td>
                             <td>
                                 <div class="crud-actions">
-                                    <button class="btn-edit" onclick="showEditModal(@user.Id, '@user.Username', '@user.RealName', '@user.Gender', '@(user.Phone ?? "")')">编辑</button>
+                                    <button class="btn-edit" onclick="showEditModal(@user.Id, '@user.Username', '@user.RealName', '@user.Gender', '@(user.Phone ?? "")', '@string.Join(",", user.RoleKeys)')">编辑</button>
                                     <button class="btn-delete" onclick="confirmDelete(@user.Id, '@user.Username')">删除</button>
                                 </div>
                             </td>
@@ -136,6 +136,18 @@
                 <label>新密码（不修改请留空）</label>
                 <input type="password" name="Password" class="form-input" />
             </div>
+            <div class="form-row">
+                <label>角色</label>
+                <div class="form-radio-group" style="flex-direction:column;gap:8px;">
+                    @foreach (var role in Model.AvailableRoles)
+                    {
+                        <label class="form-radio">
+                            <input type="checkbox" name="Roles" value="@role.Key" id="role_@role.Key" />
+                            <span>@role.Name (@role.Key)</span>
+                        </label>
+                    }
+                </div>
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary-app" onclick="closeEditModal()">取消</button>
                 <button type="submit" class="btn-primary-app">保存修改</button>
@@ -144,16 +156,23 @@
     </div>
 </div>
 
+@section Scripts {
 <script>
     function showAddModal() { document.getElementById('addModal').classList.add('show'); }
     function closeAddModal() { document.getElementById('addModal').classList.remove('show'); document.getElementById('addForm').reset(); }
-    function showEditModal(id, username, realName, gender, phone) {
+    function showEditModal(id, username, realName, gender, phone, roles) {
         document.getElementById('editId').value = id;
         document.getElementById('editUsername').value = username;
         document.getElementById('editRealName').value = realName;
         document.getElementById('editPhone').value = phone || '';
         document.getElementById('editModal').classList.add('show');
         document.querySelectorAll('#editModal input[name="Gender"]').forEach(function(r) { r.checked = r.value === gender; });
+
+        // Set role checkboxes
+        var roleList = roles ? roles.split(',') : [];
+        document.querySelectorAll('#editModal input[name="Roles"]').forEach(function(cb) {
+            cb.checked = roleList.indexOf(cb.value) >= 0;
+        });
     }
     function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }
     document.getElementById('addForm').addEventListener('submit', function(e) {
@@ -169,17 +188,20 @@
         var fd = new FormData(this);
         fetch('?handler=Edit', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) { return r.json(); }).then(function(data) {
-                if (data.success) { location.reload(); } else { showToast(data.message, false); }
+                showToast(data.success ? (data.message || '编辑成功') : data.message, data.success);
+                if (data.success) setTimeout(function() { location.reload(); }, 1000);
             });
     });
     function confirmDelete(id, username) {
         if (confirm('确定要删除用户 "' + username + '" 吗？此操作不可恢复。')) {
             fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); }).then(function(data) {
-                    if (data.success) { location.reload(); } else { showToast(data.message, false); }
+                    showToast(data.success ? (data.message || '删除成功') : data.message, data.success);
+                    if (data.success) setTimeout(function() { location.reload(); }, 1000);
                 });
         }
     }
     document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) closeAddModal(); });
     document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEditModal(); });
 </script>
+}
