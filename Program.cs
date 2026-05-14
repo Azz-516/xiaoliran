@@ -30,7 +30,7 @@ namespace xiaoliran
                 builder.Services.AddSession();
 
                 builder.Services.AddDbContext<AppDbContext>(options =>
-                    options.UseSqlServer("Server=(localdb)\\MSSQLLocalDB;Database=cleandb2;Trusted_Connection=True;TrustServerCertificate=True;"));
+                    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
                 var app = builder.Build();
 
