@@ -44,7 +44,6 @@ function closeConfirmDialog() {
     if (dialog) {
         dialog.classList.remove('show');
     }
-    confirmCallback = null;
 }
 
 // Initialize confirm dialog buttons
