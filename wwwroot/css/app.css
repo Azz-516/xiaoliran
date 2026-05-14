@@ -431,6 +431,35 @@ body {
     outline: none;
 }
 
+/* ---- Order Cost Display ---- */
+.order-cost-display {
+    width: 100%;
+    padding: 8px 12px;
+    font-size: 20px;
+    font-weight: 700;
+    color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    border: 1.5px dashed #667eea;
+    border-radius: 10px;
+}
+
+.order-cost-display.order-cost-unsupported {
+    color: #a0aec0;
+    background: #f7f9fc;
+    border-color: #e8ecf1;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.order-unsupported-msg {
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #e53e3e;
+    background: #fff5f5;
+    border: 1px solid #fed7d7;
+    border-radius: 8px;
+}
+
 .form-input {
     width: 100%;
     padding: 8px 12px;

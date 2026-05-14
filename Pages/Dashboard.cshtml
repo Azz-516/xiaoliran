@@ -197,7 +197,7 @@ else
             </div>
             <div class="form-row">
                 <label>服务类型</label>
-                <select name="ServiceType" class="form-input">
+                <select name="ServiceType" id="orderServiceType" class="form-input">
                     <option value="洗衣">洗衣</option>
                     <option value="干洗">干洗</option>
                     <option value="熨烫">熨烫</option>
@@ -206,7 +206,27 @@ else
             </div>
             <div class="form-row">
                 <label>衣物类型</label>
-                <input type="text" name="ClothingType" class="form-input" placeholder="如：衬衫、外套" required />
+                <select name="ClothingType" id="orderClothingType" class="form-input">
+                    <option value="T恤/衬衫">T恤/衬衫</option>
+                    <option value="裤子">裤子</option>
+                    <option value="外套">外套</option>
+                    <option value="鞋子">鞋子</option>
+                    <option value="其他">其他</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>数量</label>
+                <select name="Quantity" id="orderQuantity" class="form-input">
+                    @for (var i = 1; i <= 10; i++) { <option value="@i">@i 件</option> }
+                </select>
+            </div>
+            <div class="form-row">
+                <label>预估费用</label>
+                <div id="orderEstimatedCost" class="order-cost-display">¥0.00</div>
+                <input type="hidden" name="EstimatedCost" id="orderEstimatedCostInput" />
+            </div>
+            <div class="form-row" id="orderUnsupportedNotice" style="display:none;">
+                <div class="order-unsupported-msg">此服务不支持此类衣物</div>
             </div>
             <div class="form-row">
                 <label>备注</label>
@@ -215,10 +235,6 @@ else
             <div class="form-row">
                 <label>取件时间</label>
                 <input type="datetime-local" name="PickupTime" class="form-input" />
-            </div>
-            <div class="form-row">
-                <label>预估费用（元）</label>
-                <input type="number" name="EstimatedCost" class="form-input" step="0.01" min="0" placeholder="0.00" required />
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary-app" onclick="closeOrderModal()">取消</button>
@@ -230,11 +246,53 @@ else
 
 @section Scripts {
 <script>
+    var PRICING = {
+        '洗衣':  { 'T恤/衬衫': 15, '裤子': 15, '外套': 20, '鞋子': null, '其他': 18 },
+        '干洗':  { 'T恤/衬衫': 25, '裤子': 25, '外套': 35, '鞋子': null, '其他': 30 },
+        '熨烫':  { 'T恤/衬衫': 12, '裤子': 12, '外套': 18, '鞋子': null, '其他': 15 },
+        '洗鞋':  { 'T恤/衬衫': null, '裤子': null, '外套': null, '鞋子': 20, '其他': 25 }
+    };
+
+    function calcEstimatedCost() {
+        var service = document.getElementById('orderServiceType').value;
+        var clothing = document.getElementById('orderClothingType').value;
+        var qty = parseInt(document.getElementById('orderQuantity').value) || 1;
+        var unit = PRICING[service]?.[clothing];
+        var costEl = document.getElementById('orderEstimatedCost');
+        var noticeEl = document.getElementById('orderUnsupportedNotice');
+        var submitBtn = document.querySelector('#orderForm .btn-primary-app');
+
+        if (!unit) {
+            costEl.textContent = '—';
+            costEl.classList.add('order-cost-unsupported');
+            noticeEl.style.display = '';
+            submitBtn.disabled = true;
+            submitBtn.style.opacity = '0.5';
+            document.getElementById('orderEstimatedCostInput').value = '';
+            return;
+        }
+
+        var total = unit * qty;
+        costEl.textContent = '¥' + total.toFixed(2);
+        costEl.classList.remove('order-cost-unsupported');
+        noticeEl.style.display = 'none';
+        submitBtn.disabled = false;
+        submitBtn.style.opacity = '1';
+        document.getElementById('orderEstimatedCostInput').value = total;
+    }
+
     function showOrderModal(shopId, shopName) {
         document.getElementById('orderShopId').value = shopId;
         document.getElementById('orderShopName').value = shopName;
+        document.getElementById('orderForm').reset();
+        document.getElementById('orderQuantity').value = '1';
+        calcEstimatedCost();
         document.getElementById('orderModal').classList.add('show');
     }
+
+    document.getElementById('orderServiceType').addEventListener('change', calcEstimatedCost);
+    document.getElementById('orderClothingType').addEventListener('change', calcEstimatedCost);
+    document.getElementById('orderQuantity').addEventListener('change', calcEstimatedCost);
     function closeOrderModal() {
         document.getElementById('orderModal').classList.remove('show');
         document.getElementById('orderForm').reset();
