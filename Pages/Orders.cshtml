@@ -178,12 +178,13 @@
             });
     });
     function confirmDelete(id, orderNo) {
-        if (confirm('确定要删除订单 "' + orderNo + '" 吗？此操作不可恢复。')) {
+        showConfirmDialog('确定要删除订单 "' + orderNo + '" 吗？此操作不可恢复。', function() {
             fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); }).then(function(data) {
-                    if (data.success) { location.reload(); } else { showToast(data.message, false); }
+                    showToast(data.success ? (data.message || '删除成功') : data.message, data.success);
+                    if (data.success) { location.reload(); }
                 });
-        }
+        });
     }
     document.getElementById('statusModal').addEventListener('click', function(e) { if (e.target === this) closeStatusModal(); });
 </script>

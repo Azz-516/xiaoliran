@@ -193,13 +193,13 @@
             });
     });
     function confirmDelete(id, username) {
-        if (confirm('确定要删除用户 "' + username + '" 吗？此操作不可恢复。')) {
+        showConfirmDialog('确定要删除用户 "' + username + '" 吗？此操作不可恢复。', function() {
             fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); }).then(function(data) {
                     showToast(data.success ? (data.message || '删除成功') : data.message, data.success);
-                    if (data.success) setTimeout(function() { location.reload(); }, 1000);
+                    if (data.success) { location.reload(); }
                 });
-        }
+        });
     }
     document.getElementById('addModal').addEventListener('click', function(e) { if (e.target === this) closeAddModal(); });
     document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEditModal(); });
