@@ -13,7 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Entity Framework Core 10.0.7** (SqlServer provider)
 - **Serilog.AspNetCore 10.0.0** — logs to console + `logs/log-YYYYMMDD.txt` (daily rolling, min level Warning, Microsoft overridden to Information)
 - **Database**: LocalDB (`cleandb`), Windows auth, connection string hardcoded in `Program.cs`
-- **Session-based auth + RBAC**: `AddSession()` + `UseSession()` — stores UserId, UserName, RealName, Gender, UserRoles, UserPermissions after login
+- **Session-based auth + RBAC**: `AddSession()` + `UseSession()` — stores 7 session keys after login: UserId, UserName, RealName, Gender, Phone, UserRoles, UserPermissions
 - **Namespace**: `xiaoliran` (used in `_ViewImports.cshtml`, all model/page references)
 
 ## Build and Run
@@ -40,7 +40,7 @@ Dev server ports come from `Properties/launchSettings.json`: HTTP **5079**, HTTP
 
 | Model | Table | Purpose |
 |-------|-------|---------|
-| `TbUser` | `tb_user` | Users (Id, Username, Password, RealName, Gender, CreateTime) |
+| `TbUser` | `tb_user` | Users (Id, Username, Password, RealName, Gender, Phone, CreateTime) |
 | `Role` | `tb_role` | RBAC roles (Id, RoleKey, RoleName, Description, CreateTime) |
 | `UserRole` | `tb_user_role` | User-Role many-to-many (Id, UserId, RoleId, CreateTime) |
 | `Permission` | `tb_permission` | Permissions (Id, PermissionKey, PermissionName, Module, CreateTime) |
@@ -75,12 +75,13 @@ Pages/
     _AppLayout.cshtml      # Post-login layout: sidebar nav (role-based) + top bar with avatar/profile popup
     _Layout.cshtml         # Pre-login shared layout (Bootstrap navbar/footer)
     _ValidationScriptsPartial.cshtml
-  Login.cshtml/.cs        # Login — sets 6 session keys (UserId, UserName, RealName, Gender, UserRoles, UserPermissions)
+  Login.cshtml/.cs        # Login — sets 7 session keys (UserId, UserName, RealName, Gender, Phone, UserRoles, UserPermissions)
   Register.cshtml/.cs     # Registration — creates user, assigns default 'user' role, redirects /Login
   Dashboard.cshtml/.cs    # Role-aware: admin = stat cards + recent orders; user = shop card grid (paginated)
   LaundryShop.cshtml/.cs  # Admin: searchable/filterable shop list with AJAX CRUD modals
   UserManagement.cshtml/.cs  # Admin: searchable user list with AJAX CRUD modals
   MyOrders.cshtml/.cs     # User: personal order list (role-gated in _AppLayout sidebar)
+  Orders.cshtml/.cs       # Admin: order list with status edit modal and delete, pagination, search/filter
   Logout.cshtml/.cs       # POST-only: clears session, redirects to /Login
   Index.cshtml            # Pre-login default home
   Privacy.cshtml / Error.cshtml
@@ -93,7 +94,7 @@ wwwroot/
     site.css          # Default ASP.NET overrides
     login.css         # Login/register gradient theme (#667eea → #764ba2), glassmorphism card
     app.css           # Post-login: sidebar, stat cards, data tables, badges, profile popup, toast, modals, shop grid
-  js/site.js            # Empty placeholder
+  js/site.js            # showToast() + showConfirmDialog() utilities
   lib/                  # Bootstrap 5, jQuery, jQuery Validation (vendored)
 logs/                   # Serilog log files
 Properties/
@@ -103,12 +104,12 @@ Properties/
 ## Key Patterns
 
 - **Two layouts**: Pre-login pages use `_Layout.cshtml` or `Layout = null`. Post-login pages use `_AppLayout.cshtml` with sidebar and `ViewData["Title"]`.
-- **Session auth with RBAC**: Login sets 6 session keys including `UserRoles` and `UserPermissions` (comma-separated strings). Sidebar navigation shows/hides items based on `userRoles.Contains("admin")` / `userRoles.Contains("user")`.
+- **Session auth with RBAC**: Login sets 7 session keys including `UserRoles` and `UserPermissions` (comma-separated strings). Sidebar navigation shows/hides items based on `userRoles.Contains("admin")` / `userRoles.Contains("user")`.
 - **PermissionHelper**: `PermissionHelper.CheckPermission(page, permissionKey)` checks session for UserId + permission key, redirects to `/Dashboard` with toast if unauthorized.
 - **No Personal.cshtml/.cs**: `/Personal` is a minimal API POST endpoint in `Program.cs`. Accepts form data (RealName, Gender, Password), updates user and session, returns JSON `{ success, message, realName, initial, gender }`.
 - **/api/register minimal API**: Accepts JSON body (bound to `RegisterRequest` record), creates user + assigns default `user` role, returns JSON.
-- **AJAX CRUD pattern**: LaundryShop and UserManagement use `[IgnoreAntiforgeryToken]` on the page model. CRUD operations POST to `?handler=Add`, `?handler=Edit`, `?handler=Delete` with `X-Requested-With: XMLHttpRequest` header. Response: `{ success, message }`.
-- **Pagination**: Uses query params `?page=N` with `SearchKey`/`StatusFilter` preserved. `PageSize = 15`. `.card-main` wrapper + `.pagination` div with `.page-link` classes.
+- **AJAX CRUD pattern**: LaundryShop, UserManagement, and Orders use `[IgnoreAntiforgeryToken]` on the page model. CRUD operations POST to `?handler=Add`, `?handler=Edit`, `?handler=Delete` with `X-Requested-With: XMLHttpRequest` header. Response: `{ success, message }`.
+- **Pagination**: Uses query params `?p=N` with `SearchKey`/`StatusFilter` preserved. `PageSize = 15` for management pages, `PageSize = 9` for user Dashboard shop grid. `.card-main` wrapper + `.pagination` div with `.page-link` classes.
 - **Modal pattern**: `.modal-overlay` + `.modal-content` with `.show` class toggle. JavaScript functions: `showXxxModal()`, `closeXxxModal()`.
 - **Toast UI**: `showToast(msg, success)` in `_AppLayout` — sets `.app-toast` div with `.app-toast-success`/`.app-toast-error` class, auto-dismisses in 3s.
 - **Role-aware Dashboard**: `DashboardModel.IsAdmin` checks session `UserRoles.Contains("admin")`. Admin view: 4 stat cards (users, shops, pending orders, monthly revenue) + recent orders table. User view: paginated shop card grid.
@@ -120,7 +121,11 @@ Properties/
 - **CSS architecture**: `site.css` = default ASP.NET overrides; `login.css` = login/register gradient; `app.css` = post-login components (sidebar, cards, tables, modals, grid). All CSS uses `asp-append-version="true"`.
 - **SVG icons**: All icons are inline SVGs (Feather-style).
 - **Passwords in plaintext**: No hashing. Direct string comparison.
-- **`[IgnoreAntiforgeryToken]`** on pages that use AJAX form submits (UserManagement, LaundryShop) instead of using `@Html.AntiForgeryToken()` in forms.
+- **`[IgnoreAntiforgeryToken]`** on pages that use AJAX form submits (UserManagement, LaundryShop, Orders) instead of using `@Html.AntiForgeryToken()` in forms.
+- **Custom confirm dialog**: `site.js` provides `showConfirmDialog(message, callback)` with a `.modal-overlay` confirm dialog (not browser `confirm()`), wired to `#confirmDialog` in `_AppLayout.cshtml`. However, delete buttons in UserManagement, LaundryShop, and Orders **still use native `confirm()`** — they have not been migrated to the custom dialog yet.
+- **Duplicate badge helper**: `GetOrderBadgeClass(status)` is defined inline in `@functions` blocks across Dashboard, Orders, and MyOrders cshtml files rather than centralized.
+- **Phone field**: `TbUser.Phone` exists on the model, is part of login session (7th key), and is editable in the profile popup. Registration endpoint accepts optional `Phone` in `RegisterRequest`.
+- **No navigation properties**: All entity relationships are resolved via explicit LINQ joins (`_db.TbUsers.Where(u => u.Id == o.UserId)`) rather than EF navigation properties.
 
 ## Important Notes
 
@@ -129,6 +134,7 @@ Properties/
 - **No `.cursor/`, `.cursorrules`, or `copilot-instructions.md`** files.
 - **No `README.md`**.
 - **`DateTime.Now`** used in model defaults and seeding — returns local (Beijing) time on Windows server.
+- **Login session keys** (7 total): UserId, UserName, RealName, Gender, Phone, UserRoles, UserPermissions — all set in `LoginModel.OnPost`.
 - **`RegisterModel.OnPost` redirects to `/Login`** on success — the success toast in Register.cshtml (`IsSuccess == true`) renders only on non-redirect failure paths (though currently success always redirects).
 - **`HttpContextAccessor` registered** but not used — session accessed via `HttpContext` property on `PageModel`.
 - **`Order.Status` values**: `待取件`, `待清洗`, `洗涤中`, `已完成`, `已送达`.
@@ -142,7 +148,7 @@ Properties/
 - ❌ Wrong: `asp-route-page="@i"` or `OnGet(int page = 1)` — overrides the page path
 - ✅ Correct: `asp-route-p="@i"` and `OnGet(int p = 1)` — uses query string `?p=2`
 
-All existing pagination (Dashboard, UserManagement, LaundryShop) uses `p` as the parameter name.
+All existing pagination (Dashboard, UserManagement, LaundryShop, Orders) uses `p` as the parameter name.
 
 ## CSS Layout Pattern
 
