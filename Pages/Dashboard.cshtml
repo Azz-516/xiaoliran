@@ -151,7 +151,7 @@ else
                             }
                         </div>
                         <div class="shop-card-footer">
-                            <button class="btn-shop-action">立即下单</button>
+                            <button class="btn-shop-action" onclick="showOrderModal(@shop.Id, '@shop.Name.Replace("'", "\\'")')">立即下单</button>
                         </div>
                     </div>
                 }
@@ -175,6 +175,71 @@ else
     </div>
 }
 
+<!-- Order Modal -->
+<div class="modal-overlay" id="orderModal">
+    <div class="modal-content" style="max-width:560px;">
+        <h3>下单</h3>
+        <form id="orderForm">
+            <input type="hidden" name="LaundryShopId" id="orderShopId" />
+            <div class="form-row">
+                <label>洗衣店</label>
+                <input type="text" id="orderShopName" class="form-readonly" readonly />
+            </div>
+            <div class="form-row">
+                <label>服务类型</label>
+                <select name="ServiceType" class="form-input">
+                    <option value="洗衣">洗衣</option>
+                    <option value="干洗">干洗</option>
+                    <option value="熨烫">熨烫</option>
+                    <option value="洗鞋">洗鞋</option>
+                </select>
+            </div>
+            <div class="form-row">
+                <label>衣物类型</label>
+                <input type="text" name="ClothingType" class="form-input" placeholder="如：衬衫、外套" required />
+            </div>
+            <div class="form-row">
+                <label>备注</label>
+                <textarea name="Remark" class="form-input" rows="2" placeholder="选填"></textarea>
+            </div>
+            <div class="form-row">
+                <label>取件时间</label>
+                <input type="datetime-local" name="PickupTime" class="form-input" />
+            </div>
+            <div class="form-row">
+                <label>预估费用（元）</label>
+                <input type="number" name="EstimatedCost" class="form-input" step="0.01" min="0" placeholder="0.00" required />
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-app" onclick="closeOrderModal()">取消</button>
+                <button type="submit" class="btn-primary-app">确认下单</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function showOrderModal(shopId, shopName) {
+        document.getElementById('orderShopId').value = shopId;
+        document.getElementById('orderShopName').value = shopName;
+        document.getElementById('orderModal').classList.add('show');
+    }
+    function closeOrderModal() {
+        document.getElementById('orderModal').classList.remove('show');
+        document.getElementById('orderForm').reset();
+    }
+    document.getElementById('orderForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var fd = new FormData(this);
+        fetch('?handler=AddOrder', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); }).then(function(data) {
+                showToast(data.success ? (data.message || '下单成功') : data.message, data.success);
+                if (data.success) { closeOrderModal(); setTimeout(function() { location.reload(); }, 1500); }
+            });
+    });
+    document.getElementById('orderModal').addEventListener('click', function(e) { if (e.target === this) closeOrderModal(); });
+</script>
 @if (!string.IsNullOrEmpty(Model.ToastMessage))
 {
     <script>
@@ -182,6 +247,7 @@ else
             showToast('@Model.ToastMessage', false);
         });
     </script>
+}
 }
 
 

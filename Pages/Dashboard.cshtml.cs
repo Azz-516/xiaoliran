@@ -6,6 +6,7 @@ using xiaoliran.Models;
 
 namespace xiaoliran.Pages
 {
+    [IgnoreAntiforgeryToken]
     public class DashboardModel : PageModel
     {
         private readonly AppDbContext _db;
@@ -83,6 +84,53 @@ namespace xiaoliran.Pages
                     .Skip((CurrentPage - 1) * pageSize)
                     .Take(pageSize)
                     .ToList();
+            }
+        }
+
+        public async Task<IActionResult> OnPostAddOrder()
+        {
+            try
+            {
+                var userId = HttpContext.Session.GetString("UserId");
+                if (string.IsNullOrEmpty(userId))
+                    return new JsonResult(new { success = false, message = "未登录" });
+
+                var laundryShopId = int.Parse(Request.Form["LaundryShopId"]);
+                var serviceType = Request.Form["ServiceType"].ToString();
+                var clothingType = Request.Form["ClothingType"].ToString();
+                var remark = Request.Form["Remark"].ToString();
+                var estimatedCostStr = Request.Form["EstimatedCost"].ToString();
+                var pickupTimeStr = Request.Form["PickupTime"].ToString();
+
+                if (string.IsNullOrWhiteSpace(clothingType))
+                    return new JsonResult(new { success = false, message = "请输入衣物类型" });
+
+                if (!decimal.TryParse(estimatedCostStr, out var estimatedCost) || estimatedCost < 0)
+                    return new JsonResult(new { success = false, message = "请输入有效的预估费用" });
+
+                var orderNo = $"ORD-{DateTime.Now:yyyyMMdd}-{Guid.NewGuid().ToString("N").Substring(0, 4).ToUpper()}";
+
+                var order = new Order
+                {
+                    OrderNo = orderNo,
+                    UserId = int.Parse(userId),
+                    LaundryShopId = laundryShopId,
+                    ServiceType = serviceType,
+                    ClothingType = clothingType,
+                    Status = "待取件",
+                    EstimatedCost = estimatedCost,
+                    Remark = remark,
+                    PickupTime = string.IsNullOrWhiteSpace(pickupTimeStr) ? null : DateTime.Parse(pickupTimeStr)
+                };
+
+                _db.Orders.Add(order);
+                await _db.SaveChangesAsync();
+
+                return new JsonResult(new { success = true, message = "下单成功", orderNo = orderNo });
+            }
+            catch (Exception)
+            {
+                return new JsonResult(new { success = false, message = "服务异常，请稍后重试" });
             }
         }
     }
