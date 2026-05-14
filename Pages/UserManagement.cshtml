@@ -158,9 +158,11 @@
 
 @section Scripts {
 <script>
-    function showAddModal() { document.getElementById('addModal').classList.add('show'); }
+    var reloadTimer = null;
+    function showAddModal() { if (reloadTimer) { clearTimeout(reloadTimer); reloadTimer = null; } document.getElementById('addModal').classList.add('show'); }
     function closeAddModal() { document.getElementById('addModal').classList.remove('show'); document.getElementById('addForm').reset(); }
     function showEditModal(id, username, realName, gender, phone, roles) {
+        if (reloadTimer) { clearTimeout(reloadTimer); reloadTimer = null; }
         document.getElementById('editId').value = id;
         document.getElementById('editUsername').value = username;
         document.getElementById('editRealName').value = realName;
@@ -180,7 +182,7 @@
         fetch('?handler=Add', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) { return r.json(); }).then(function(data) {
                 showToast(data.success ? (data.message || '添加成功') : data.message, data.success);
-                if (data.success) { closeAddModal(); setTimeout(function() { location.reload(); }, 2000); }
+                if (data.success) { closeAddModal(); reloadTimer = setTimeout(function() { location.reload(); }, 2000); }
             });
     });
     document.getElementById('editForm').addEventListener('submit', function(e) {
@@ -189,7 +191,7 @@
         fetch('?handler=Edit', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) { return r.json(); }).then(function(data) {
                 showToast(data.success ? (data.message || '编辑成功') : data.message, data.success);
-                if (data.success) { closeEditModal(); setTimeout(function() { location.reload(); }, 2000); }
+                if (data.success) { closeEditModal(); reloadTimer = setTimeout(function() { location.reload(); }, 2000); }
             });
     });
     function confirmDelete(id, username) {
@@ -197,7 +199,7 @@
             fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); }).then(function(data) {
                     showToast(data.success ? (data.message || '删除成功') : data.message, data.success);
-                    if (data.success) { setTimeout(function() { location.reload(); }, 2000); }
+                    if (data.success) { reloadTimer = setTimeout(function() { location.reload(); }, 2000); }
                 });
         });
     }
