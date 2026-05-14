@@ -28,7 +28,7 @@ namespace xiaoliran.Pages
         public string Gender { get; set; } = "男";
 
         [BindProperty]
-        public string Phone { get; set; } = string.Empty;
+        public string? Phone { get; set; }
 
         public string Message { get; set; } = string.Empty;
         public bool IsSuccess { get; set; }
@@ -66,7 +66,7 @@ namespace xiaoliran.Pages
                 Password = Password,
                 RealName = RealName,
                 Gender = Gender,
-                Phone = Phone
+                Phone = Phone ?? "",
             };
 
             _db.TbUsers.Add(user);

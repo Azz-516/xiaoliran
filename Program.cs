@@ -169,6 +169,20 @@ namespace xiaoliran
                     db.Roles.AddRange(adminRole, userRole);
                     db.SaveChanges();
 
+                    // Seed admin user
+                    var adminUser = new TbUser
+                    {
+                        Username = "xiaoliran",
+                        Password = "xiaoliran",
+                        RealName = "李然",
+                        Gender = "女",
+                        Phone = ""
+                    };
+                    db.TbUsers.Add(adminUser);
+                    db.SaveChanges();
+                    db.UserRoles.Add(new UserRole { UserId = adminUser.Id, RoleId = adminRole.Id });
+                    db.SaveChanges();
+
                     // Seed permissions
                     var dashboardPerm = new Permission { PermissionKey = "view_dashboard", PermissionName = "查看首页", Module = "system" };
                     var manageUsersPerm = new Permission { PermissionKey = "manage_users", PermissionName = "用户管理", Module = "user" };
@@ -224,6 +238,17 @@ namespace xiaoliran
                     }
                     db.TbUsers.AddRange(users);
                     db.SaveChanges();
+
+                    // Assign default 'user' role to all test users
+                    var userRoleId = db.Roles.Where(r => r.RoleKey == "user").Select(r => r.Id).FirstOrDefault();
+                    if (userRoleId > 0)
+                    {
+                        foreach (var user in users)
+                        {
+                            db.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = userRoleId });
+                        }
+                        db.SaveChanges();
+                    }
 
                     var areas = new[] { "东校区", "西校区", "南校区", "北校区" };
                     var prefixes = new[] { "清爽", "洁净", "亮洁", "净美", "舒心", "快洁", "优洗", "干净点", "洗衣邦", "衣洁净" };

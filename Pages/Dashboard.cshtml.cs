@@ -52,7 +52,7 @@ namespace xiaoliran.Pages
 
                 RecentOrders = _db.Orders
                     .OrderByDescending(o => o.CreateTime)
-                    .Take(10)
+                    .Take(14)
                     .Select(o => new OrderViewModel
                     {
                         OrderNo = o.OrderNo,
