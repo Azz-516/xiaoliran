@@ -51,6 +51,19 @@
             </tbody>
         </table>
     </div>
+    <div class="card-main-footer">
+        @if (Model.TotalPages > 1)
+        {
+            <div class="pagination">
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a class="page-link @(i == Model.CurrentPage ? "active" : "")"
+                       asp-page="/MyOrders"
+                       asp-route-p="@i">@i</a>
+                }
+            </div>
+        }
+    </div>
 </div>
 
 @functions {

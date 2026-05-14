@@ -15,8 +15,11 @@ namespace xiaoliran.Pages
         }
 
         public List<MyOrderViewModel> Orders { get; set; } = new();
+        public int CurrentPage { get; set; } = 1;
+        public int TotalPages { get; set; } = 1;
+        private const int PageSize = 15;
 
-        public void OnGet()
+        public void OnGet(int p = 1)
         {
             var userId = HttpContext.Session.GetString("UserId");
             if (string.IsNullOrEmpty(userId))
@@ -26,9 +29,14 @@ namespace xiaoliran.Pages
             }
 
             var uid = int.Parse(userId);
-            Orders = _db.Orders
-                .Where(o => o.UserId == uid)
+            var query = _db.Orders.Where(o => o.UserId == uid);
+            var totalCount = query.Count();
+            CurrentPage = Math.Max(1, p);
+            TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize);
+            Orders = query
                 .OrderByDescending(o => o.CreateTime)
+                .Skip((CurrentPage - 1) * PageSize)
+                .Take(PageSize)
                 .Select(o => new MyOrderViewModel
                 {
                     OrderNo = o.OrderNo,
