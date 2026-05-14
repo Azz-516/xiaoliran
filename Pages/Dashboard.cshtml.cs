@@ -29,8 +29,10 @@ namespace xiaoliran.Pages
         public List<LaundryShop> Shops { get; set; } = new();
         public int CurrentPage { get; set; } = 1;
         public int TotalPages { get; set; } = 1;
+        public string SearchKey { get; set; } = string.Empty;
+        public string StatusFilter { get; set; } = string.Empty;
 
-        public void OnGet()
+        public void OnGet(string searchKey = "", string statusFilter = "")
         {
             ToastMessage = HttpContext.Request.Query["toast"].ToString();
 
@@ -60,11 +62,24 @@ namespace xiaoliran.Pages
             }
             else
             {
-                const int pageSize = 12;
+                const int pageSize = 9;
+                SearchKey = searchKey;
+                StatusFilter = statusFilter;
                 CurrentPage = Math.Max(1, int.TryParse(HttpContext.Request.Query["p"], out var p) ? p : 1);
-                TotalPages = (int)Math.Ceiling(_db.LaundryShops.Count() / (double)pageSize);
-                Shops = _db.LaundryShops
-                    .OrderBy(s => s.Id)
+
+                var query = _db.LaundryShops.AsQueryable();
+                if (!string.IsNullOrWhiteSpace(searchKey))
+                {
+                    query = query.Where(s => s.Name.Contains(searchKey) || s.Address.Contains(searchKey));
+                }
+                if (!string.IsNullOrWhiteSpace(statusFilter))
+                {
+                    query = query.Where(s => s.Status == statusFilter);
+                }
+
+                TotalPages = (int)Math.Ceiling(query.Count() / (double)pageSize);
+                Shops = query
+                    .OrderByDescending(s => s.CreateTime)
                     .Skip((CurrentPage - 1) * pageSize)
                     .Take(pageSize)
                     .ToList();

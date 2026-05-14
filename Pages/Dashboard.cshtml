@@ -88,52 +88,91 @@
 }
 else
 {
-    <div class="shop-grid">
-        @foreach (var shop in Model.Shops)
-        {
-            <div class="shop-card @(shop.Status == "已停业" ? "shop-closed" : "")">
-                <div class="shop-card-header">
-                    <h3>@shop.Name</h3>
-                    <span class="shop-status-badge @(shop.Status == "营业中" ? "status-open" : "status-closed")">@shop.Status</span>
-                </div>
-                <div class="shop-card-body">
-                    <div class="shop-info-row">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
-                        </svg>
-                        <span>@shop.Address</span>
-                    </div>
-                    <div class="shop-info-row">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
-                        </svg>
-                        <span>@shop.ContactPhone</span>
-                    </div>
-                    @if (!string.IsNullOrEmpty(shop.BusinessHours))
+    <div class="card-main">
+        <div class="card-main-header">
+            <h3>门店列表</h3>
+            <form method="get" style="display:flex;gap:8px;align-items:center;">
+                <input type="text" name="searchKey" value="@Model.SearchKey" placeholder="搜索门店名称或地址" class="form-input" style="width:180px;" />
+                <select name="statusFilter" class="form-input" style="width:100px;">
+                    <option value="">全部状态</option>
+                    @if (Model.StatusFilter == "营业中")
                     {
-                        <div class="shop-info-row">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16">
-                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
-                            </svg>
-                            <span>@shop.BusinessHours</span>
+                        <option value="营业中" selected>营业中</option>
+                        <option value="已停业">已停业</option>
+                    }
+                    else if (Model.StatusFilter == "已停业")
+                    {
+                        <option value="营业中">营业中</option>
+                        <option value="已停业" selected>已停业</option>
+                    }
+                    else
+                    {
+                        <option value="营业中">营业中</option>
+                        <option value="已停业">已停业</option>
+                    }
+                </select>
+                <button type="submit" class="btn-primary-app">搜索</button>
+            </form>
+        </div>
+        <div class="card-main-body">
+            <div class="shop-grid">
+                @foreach (var shop in Model.Shops)
+                {
+                    <div class="shop-card @(shop.Status == "已停业" ? "shop-closed" : "")">
+                        <div class="shop-card-header">
+                            <h3>@shop.Name</h3>
+                            <span class="shop-status-badge @(shop.Status == "营业中" ? "status-open" : "status-closed")">@shop.Status</span>
                         </div>
+                        <div class="shop-card-body">
+                            <div class="shop-info-row">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/>
+                                </svg>
+                                <span>@shop.Address</span>
+                            </div>
+                            <div class="shop-info-row">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>
+                                </svg>
+                                <span>@shop.ContactPhone</span>
+                            </div>
+                            @if (!string.IsNullOrEmpty(shop.BusinessHours))
+                            {
+                                <div class="shop-info-row">
+                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14">
+                                        <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                                    </svg>
+                                    <span>@shop.BusinessHours</span>
+                                </div>
+                            }
+                            @if (!string.IsNullOrEmpty(shop.Description))
+                            {
+                                <div class="shop-description">@shop.Description</div>
+                            }
+                        </div>
+                        <div class="shop-card-footer">
+                            <button class="btn-shop-action">立即下单</button>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        @if (Model.TotalPages > 1)
+        {
+            <div class="card-main-footer">
+                <div class="pagination">
+                    @for (var i = 1; i <= Model.TotalPages; i++)
+                    {
+                        <a class="page-link @(i == Model.CurrentPage ? "active" : "")"
+                           asp-page="/Dashboard"
+                           asp-route-p="@i"
+                           asp-route-searchKey="@Model.SearchKey"
+                           asp-route-statusFilter="@Model.StatusFilter">@i</a>
                     }
                 </div>
             </div>
         }
     </div>
-
-    @if (Model.TotalPages > 1)
-    {
-        <div class="pagination">
-            @for (var i = 1; i <= Model.TotalPages; i++)
-            {
-                <a class="page-link @(i == Model.CurrentPage ? "active" : "")"
-                   asp-page="/Dashboard"
-                   asp-route-p="@i">@i</a>
-            }
-        </div>
-    }
 }
 
 @if (!string.IsNullOrEmpty(Model.ToastMessage))

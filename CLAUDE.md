@@ -134,3 +134,21 @@ Properties/
 - **`Order.Status` values**: `待取件`, `待清洗`, `洗涤中`, `已完成`, `已送达`.
 - **`LaundryShop.Status` values**: `营业中`, `已停业`.
 - **`Clothing.cshtml` does not exist** — removed from the project.
+
+## Pagination Gotcha
+
+**CRITICAL**: When adding pagination to Razor Pages, **never use `page` as the query parameter name** — it conflicts with Razor Pages' internal `page` route value.
+
+- ❌ Wrong: `asp-route-page="@i"` or `OnGet(int page = 1)` — overrides the page path
+- ✅ Correct: `asp-route-p="@i"` and `OnGet(int p = 1)` — uses query string `?p=2`
+
+All existing pagination (Dashboard, UserManagement, LaundryShop) uses `p` as the parameter name.
+
+## CSS Layout Pattern
+
+Post-login pages use a fixed-height card layout with internal scrolling:
+
+- `.content-area { overflow-y: auto; }` — main scroll container (not body)
+- `.card-main { height: 100%; display: flex; flex-direction: column; }` — fills viewport
+- `.card-main-body { flex: 1; overflow-x: auto; }` — scrollable content area
+- `.card-main-footer { flex-shrink: 0; }` — pagination always visible at bottom
