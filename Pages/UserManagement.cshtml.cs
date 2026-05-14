@@ -48,7 +48,7 @@ namespace xiaoliran.Pages
                     Gender = u.Gender,
                     CreateTime = u.CreateTime.ToString("yyyy-MM-dd HH:mm"),
                     Phone = u.Phone ?? "",
-                    RoleKeys = _db.UserRoles.Where(ur => ur.UserId == u.Id).Join(_db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.RoleKey).ToList()
+                    RoleKey = _db.UserRoles.Where(ur => ur.UserId == u.Id).Join(_db.Roles, ur => ur.RoleId, r => r.Id, (ur, r) => r.RoleKey).FirstOrDefault() ?? ""
                 }).ToList();
 
             AvailableRoles = _db.Roles.Select(r => new RoleItem { Key = r.RoleKey, Name = r.RoleName }).ToList();
@@ -102,7 +102,7 @@ namespace xiaoliran.Pages
                 var gender = Request.Form["Gender"].ToString();
                 var phone = Request.Form["Phone"].ToString();
                 var password = Request.Form["Password"].ToString();
-                var selectedRoles = Request.Form["Roles"].ToArray();
+                var selectedRole = Request.Form["Role"].ToString();
 
                 var user = await _db.TbUsers.FindAsync(id);
                 if (user == null) return new JsonResult(new { success = false, message = "用户不存在" });
@@ -116,19 +116,16 @@ namespace xiaoliran.Pages
                 user.Phone = phone;
                 if (!string.IsNullOrWhiteSpace(password)) user.Password = password;
 
-                // Update roles
+                // Update role (single role per user)
                 var existingUserRoles = _db.UserRoles.Where(ur => ur.UserId == id).ToList();
                 _db.UserRoles.RemoveRange(existingUserRoles);
 
-                if (selectedRoles != null && selectedRoles.Length > 0)
+                if (!string.IsNullOrWhiteSpace(selectedRole))
                 {
-                    foreach (var roleKey in selectedRoles)
+                    var role = await _db.Roles.FirstOrDefaultAsync(r => r.RoleKey == selectedRole);
+                    if (role != null)
                     {
-                        var role = await _db.Roles.FirstOrDefaultAsync(r => r.RoleKey == roleKey);
-                        if (role != null)
-                        {
-                            _db.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
-                        }
+                        _db.UserRoles.Add(new UserRole { UserId = user.Id, RoleId = role.Id });
                     }
                 }
 
@@ -170,7 +167,7 @@ namespace xiaoliran.Pages
         public string Gender { get; set; } = string.Empty;
         public string Phone { get; set; } = string.Empty;
         public string CreateTime { get; set; } = string.Empty;
-        public List<string> RoleKeys { get; set; } = new();
+        public string RoleKey { get; set; } = string.Empty;
     }
 
     public class RoleItem
