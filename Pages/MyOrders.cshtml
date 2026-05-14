@@ -19,13 +19,16 @@
                     <th>衣物类型</th>
                     <th>费用</th>
                     <th>状态</th>
+                    <th>备注</th>
+                    <th>取件时间</th>
+                    <th>送达时间</th>
                     <th>下单时间</th>
                 </tr>
             </thead>
             <tbody>
                 @if (Model.Orders.Count == 0)
                 {
-                    <tr><td colspan="7" style="text-align:center;color:#a0aec0;">暂无订单</td></tr>
+                    <tr><td colspan="11" style="text-align:center;color:#a0aec0;">暂无订单</td></tr>
                 }
                 else
                 {
@@ -38,6 +41,9 @@
                             <td>@order.ClothingType</td>
                             <td>¥@order.EstimatedCost.ToString("F2")</td>
                             <td><span class="badge-status @(GetOrderBadgeClass(order.Status))">@order.Status</span></td>
+                            <td>@order.Remark</td>
+                            <td>@order.PickupTime</td>
+                            <td>@order.DeliveryTime</td>
                             <td>@order.CreateTime</td>
                         </tr>
                     }
