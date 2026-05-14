@@ -189,7 +189,7 @@
         fetch('?handler=Edit', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) { return r.json(); }).then(function(data) {
                 showToast(data.success ? (data.message || '编辑成功') : data.message, data.success);
-                if (data.success) { closeEditModal(); location.reload(); }
+                if (data.success) { closeEditModal(); setTimeout(function() { location.reload(); }, 2000); }
             });
     });
     function confirmDelete(id, username) {
