@@ -4,16 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-**校园干洗店管理系统** (Campus Dry Cleaning Management System) — an ASP.NET Core 10.0 Razor Pages application with Entity Framework Core and SQL Server (LocalDB).
+**校园干洗店管理系统** (Campus Dry Cleaning Management System) — an ASP.NET Core 10.0 Razor Pages application with Entity Framework Core and SQL Server (LocalDB). Role-based access control (RBAC) for admin vs. regular user experiences.
 
 ## Tech Stack
 
 - **.NET 10.0** (`net10.0` in `xiaoliran.csproj`)
 - **ASP.NET Core Razor Pages** with Bootstrap 5 + jQuery + jQuery Validation (vendored in `wwwroot/lib/`)
 - **Entity Framework Core 10.0.7** (SqlServer provider)
-- **Serilog.AspNetCore 10.0.0** — logs to console + `logs/log-YYYYMMDD.txt` (daily rolling, 10MB max, min level Warning, Microsoft overridden to Information)
+- **Serilog.AspNetCore 10.0.0** — logs to console + `logs/log-YYYYMMDD.txt` (daily rolling, min level Warning, Microsoft overridden to Information)
 - **Database**: LocalDB (`cleandb`), Windows auth, connection string hardcoded in `Program.cs`
-- **Session-based auth**: `AddSession()` + `UseSession()` — stores UserId, UserName, RealName, Gender in session after login
+- **Session-based auth + RBAC**: `AddSession()` + `UseSession()` — stores UserId, UserName, RealName, Gender, UserRoles, UserPermissions after login
 - **Namespace**: `xiaoliran` (used in `_ViewImports.cshtml`, all model/page references)
 
 ## Build and Run
@@ -28,77 +28,109 @@ Dev server ports come from `Properties/launchSettings.json`: HTTP **5079**, HTTP
 
 ## Database
 
-- **Auto-created at startup**: `db.Database.EnsureCreated()` is called in `Program.cs`. Only `tb_user` table is created.
-- **No EF Migrations**: The project uses `EnsureCreated()`, not `EnsureMigrated()` or `dotnet ef database update`. Do not add migration files — they won't be applied automatically.
-- **Connection string**: `Server=(localdb)\MSSQLLocalDB;Database=cleandb;Trusted_Connection=True;TrustServerCertificate=True;` — Windows Integrated auth (NOT `User Id=sa`), hardcoded in `Program.cs` line 33.
-- **Table name**: `tb_user` (configured via `OnModelCreating` → `modelBuilder.Entity<TbUser>().ToTable("tb_user")`). Do NOT use `[Table]` attribute — it fails to resolve in this .NET 10 setup. Configure table/column mapping in `AppDbContext.OnModelCreating` instead.
-- **CreateTime**: Uses `datetime` type with `GETDATE()` default (not `datetime2`).
-- **Recreate database**: If table structure is wrong, drop via `sqlcmd -S "(localdb)\MSSQLLocalDB"` with `ALTER DATABASE cleandb SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE cleandb;`, then `dotnet run` to recreate.
+- **Auto-created at startup**: `db.Database.EnsureCreated()` then `SeedInitialData(db)` then `SeedTestData(db)` — all called in `Program.cs`.
+- **No EF Migrations**: Uses `EnsureCreated()`, not `EnsureMigrated()` or `dotnet ef database update`. Do not add migration files.
+- **Connection string**: `Server=(localdb)\MSSQLLocalDB;Database=cleandb;Trusted_Connection=True;TrustServerCertificate=True;` — hardcoded in `Program.cs` line 33.
+- **Table name convention**: All tables use `tb_` prefix (configured via `OnModelCreating` → `.ToTable("tb_xxx")`). Do NOT use `[Table]` attribute — use `AppDbContext.OnModelCreating` for mapping.
+- **CreateTime**: All entities use `datetime` type with `GETDATE()` default (not `datetime2`).
+- **Seeding**: `SeedInitialData` seeds roles (admin, user), permissions, role-permission mappings, and 4 laundry shops. `SeedTestData` creates 50 test users + 50 extra shops (re-run safe via existence checks).
+- **Recreate database**: Drop via `sqlcmd -S "(localdb)\MSSQLLocalDB"` with `ALTER DATABASE cleandb SET SINGLE_USER WITH ROLLBACK IMMEDIATE; DROP DATABASE cleandb;`, then `dotnet run` to recreate.
+
+## Models (`Models/`)
+
+| Model | Table | Purpose |
+|-------|-------|---------|
+| `TbUser` | `tb_user` | Users (Id, Username, Password, RealName, Gender, CreateTime) |
+| `Role` | `tb_role` | RBAC roles (Id, RoleKey, RoleName, Description, CreateTime) |
+| `UserRole` | `tb_user_role` | User-Role many-to-many (Id, UserId, RoleId, CreateTime) |
+| `Permission` | `tb_permission` | Permissions (Id, PermissionKey, PermissionName, Module, CreateTime) |
+| `RolePermission` | `tb_role_permission` | Role-Permission many-to-many (Id, RoleId, PermissionId, CreateTime) |
+| `LaundryShop` | `tb_laundry_shop` | Store locations (Id, Name, Address, ContactPhone, ContactPerson, Status, BusinessHours, Description, CreateTime) |
+| `Order` | `tb_order` | Orders (Id, OrderNo, UserId, LaundryShopId, ServiceType, ClothingType, Status, EstimatedCost, Remark, PickupTime, DeliveryTime, CreateTime) |
+| `PermissionHelper` | — | Static helper: `CheckPermission(PageModel, permissionKey)` — redirects if not authorized |
+
+**Role keys**: `admin`, `user` (comma-separated in session `UserRoles`).
+**Permission keys**: `view_dashboard`, `manage_users`, `manage_shops`, `manage_orders`, `view_orders`.
 
 ## Architecture
 
 ```
-Program.cs              # Serilog config, DI (RazorPages, Session, EF Core, HttpContextAccessor),
-                        # EnsureCreated(), middleware pipeline, /Personal minimal API, /api/register minimal API
-appsettings.json         # DetailedErrors=true, logging defaults
+Program.cs              # Serilog, DI, EF Core, middleware, /Personal POST, /api/register POST,
+                        # SeedInitialData(), SeedTestData()
+appsettings.json        # DetailedErrors=true, logging defaults
 appsettings.Development.json  # Logging levels, AllowedHosts=*
 Data/
-  AppDbContext.cs       # EF DbContext — DbSet<TbUsers>, OnModelCreating (table mapping + CreateTime config)
+  AppDbContext.cs       # EF DbContext — 7 DbSets, OnModelCreating (all table mappings + datetime config)
 Models/
-  TbUser.cs             # User entity (Id, Username, Password, RealName, Gender, CreateTime)
+  TbUser.cs             # User entity
+  Role.cs               # Role entity
+  UserRole.cs           # User-Role link
+  Permission.cs         # Permission entity
+  RolePermission.cs     # Role-Permission link
+  LaundryShop.cs        # Laundry shop entity
+  Order.cs              # Order entity
+  PermissionPageModel.cs # PermissionHelper static class
 Pages/
   Shared/
-    _AppLayout.cshtml      # Post-login layout: sidebar nav + top bar with avatar, profile popup
+    _AppLayout.cshtml      # Post-login layout: sidebar nav (role-based) + top bar with avatar/profile popup
     _Layout.cshtml         # Pre-login shared layout (Bootstrap navbar/footer)
     _ValidationScriptsPartial.cshtml
-  Login.cshtml/.cs        # Login — standalone (Layout=null), validates credentials, sets 4 session keys → redirects /Dashboard
-  Register.cshtml/.cs     # Registration — standalone (Layout=null), POST → creates user, toast + redirects /Login
-  Dashboard.cshtml/.cs    # Post-login home — stat cards + recent orders (HARDCODED mock data)
-  LaundryShop.cshtml/.cs  # Post-login laundry shop table (HARDCODED mock data)
-  Clothing.cshtml/.cs     # Post-login clothing table (HARDCODED mock data)
+  Login.cshtml/.cs        # Login — sets 6 session keys (UserId, UserName, RealName, Gender, UserRoles, UserPermissions)
+  Register.cshtml/.cs     # Registration — creates user, assigns default 'user' role, redirects /Login
+  Dashboard.cshtml/.cs    # Role-aware: admin = stat cards + recent orders; user = shop card grid (paginated)
+  LaundryShop.cshtml/.cs  # Admin: searchable/filterable shop list with AJAX CRUD modals
+  UserManagement.cshtml/.cs  # Admin: searchable user list with AJAX CRUD modals
+  MyOrders.cshtml/.cs     # User: personal order list (role-gated in _AppLayout sidebar)
   Logout.cshtml/.cs       # POST-only: clears session, redirects to /Login
   Index.cshtml            # Pre-login default home
   Privacy.cshtml / Error.cshtml
   _ViewStart.cshtml       # Default Layout = "_Layout"
   _ViewImports.cshtml     # Imports xiaoliran, xiaoliran.Pages, TagHelpers
 Sql/
-  Create_tb_user.sql    # Reference SQL script (not used — EnsureCreated() handles creation)
+  Create_tb_user.sql    # Reference SQL script (not used)
 wwwroot/
   css/
     site.css          # Default ASP.NET overrides
-    login.css         # Login/register gradient theme (#667eea → #764ba2), glassmorphism card, animated circles
-    app.css           # Post-login: sidebar, stat cards, data tables, badges, profile popup, toast
+    login.css         # Login/register gradient theme (#667eea → #764ba2), glassmorphism card
+    app.css           # Post-login: sidebar, stat cards, data tables, badges, profile popup, toast, modals, shop grid
   js/site.js            # Empty placeholder
-  lib/                  # Bootstrap 5, jQuery, jQuery Validation, jQuery Validation Unobtrusive (vendored)
-logs/                   # Serilog log files (auto-created)
-docs/superpowers/       # Design specs and implementation plans (specs/, plans/)
+  lib/                  # Bootstrap 5, jQuery, jQuery Validation (vendored)
+logs/                   # Serilog log files
 Properties/
   launchSettings.json   # HTTP 5079, HTTPS 7181
 ```
 
 ## Key Patterns
 
-- **Two layouts**: Pre-login pages set `Layout = null` (Login, Register) or use `_Layout.cshtml` (Index, Privacy, Error). Post-login pages use `_AppLayout.cshtml` with sidebar and `ViewData["Title"]` for page titles.
-- **Session auth**: On login success, 4 session keys are set: `UserId`, `UserName`, `RealName`, `Gender`. Pages relying on session should check `Session.GetString("UserId")` and redirect to `/Login` if null. Dashboard/LaundryShop/Clothing currently lack this check.
-- **No Personal.cshtml/.cs**: The `/Personal` endpoint is NOT a Razor Page — it's a minimal API endpoint defined in `Program.cs`. It handles both GET-like read (via session in _AppLayout) and POST (AJAX form submit for updating profile). When it receives `X-Requested-With: XMLHttpRequest` header, it returns JSON `{ success, message, realName, initial, gender }`.
-- **/api/register minimal API**: Accepts JSON body (bound to `RegisterRequest` record), returns JSON response. Separate from the `/Register` Razor Pages POST handler.
-- **Profile popup**: `_AppLayout` top bar has an integrated profile popup. The AJAX form submit POSTs to `/Personal` and updates the avatar/display name in-place on success.
-- **Toast UI pattern**: Login uses `ErrorMessage` property + Bootstrap toast (3s auto-dismiss). Register uses `Message`/`IsSuccess` properties. Register success shows toast then redirects to /Login after 3s.
-- **Hardcoded mock data**: Dashboard, LaundryShop, Clothing all display static HTML tables — no DB queries yet. Dashboard shows order data with status badges (`pending`, `washing`, `done`, `delivered`); LaundryShop shows store data; Clothing shows garment data.
-- **Error handling**: `LoginModel.OnPost`, `/api/register`, and `/Personal` minimal API all wrap DB calls in try-catch → friendly Chinese messages.
-- **Passwords in plaintext**: No hashing implemented yet. Comparison is direct string equality.
+- **Two layouts**: Pre-login pages use `_Layout.cshtml` or `Layout = null`. Post-login pages use `_AppLayout.cshtml` with sidebar and `ViewData["Title"]`.
+- **Session auth with RBAC**: Login sets 6 session keys including `UserRoles` and `UserPermissions` (comma-separated strings). Sidebar navigation shows/hides items based on `userRoles.Contains("admin")` / `userRoles.Contains("user")`.
+- **PermissionHelper**: `PermissionHelper.CheckPermission(page, permissionKey)` checks session for UserId + permission key, redirects to `/Dashboard` with toast if unauthorized.
+- **No Personal.cshtml/.cs**: `/Personal` is a minimal API POST endpoint in `Program.cs`. Accepts form data (RealName, Gender, Password), updates user and session, returns JSON `{ success, message, realName, initial, gender }`.
+- **/api/register minimal API**: Accepts JSON body (bound to `RegisterRequest` record), creates user + assigns default `user` role, returns JSON.
+- **AJAX CRUD pattern**: LaundryShop and UserManagement use `[IgnoreAntiforgeryToken]` on the page model. CRUD operations POST to `?handler=Add`, `?handler=Edit`, `?handler=Delete` with `X-Requested-With: XMLHttpRequest` header. Response: `{ success, message }`.
+- **Pagination**: Uses query params `?page=N` with `SearchKey`/`StatusFilter` preserved. `PageSize = 15`. `.card-main` wrapper + `.pagination` div with `.page-link` classes.
+- **Modal pattern**: `.modal-overlay` + `.modal-content` with `.show` class toggle. JavaScript functions: `showXxxModal()`, `closeXxxModal()`.
+- **Toast UI**: `showToast(msg, success)` in `_AppLayout` — sets `.app-toast` div with `.app-toast-success`/`.app-toast-error` class, auto-dismisses in 3s.
+- **Role-aware Dashboard**: `DashboardModel.IsAdmin` checks session `UserRoles.Contains("admin")`. Admin view: 4 stat cards (users, shops, pending orders, monthly revenue) + recent orders table. User view: paginated shop card grid.
+- **Status badges**: `.badge-status` with modifiers `pending`, `washing`, `done`, `delivered`. Shop status: `.shop-status-badge` with `status-open` / `status-closed`.
+- **Shop cards**: `.shop-grid` with `.shop-card` (`.shop-closed` modifier for closed shops). 3-column grid on desktop.
 - **Chinese UI**: All user-facing text is Chinese (zh-CN).
-- **No `[Table]` attribute on models** — use `OnModelCreating` in `AppDbContext` for table/column configuration. `[Key]` attribute on `TbUser.Id` is the only data annotation used.
-- **Logout is POST-only**: The `/Logout` endpoint only responds to POST requests (form submission from _AppLayout sidebar footer).
-- **CSS architecture**: `site.css` = default ASP.NET overrides; `login.css` = login/register gradient theme; `app.css` = post-login layout components. All CSS files use `asp-append-version="true"`.
-- **SVG icons**: All icons are inline SVGs (Feather-style), not icon font libraries.
+- **No `[Table]` attribute** — all table/column mapping in `AppDbContext.OnModelCreating`. `[Key]` is the only data annotation used for primary keys.
+- **Logout is POST-only**: Form submission from _AppLayout sidebar footer.
+- **CSS architecture**: `site.css` = default ASP.NET overrides; `login.css` = login/register gradient; `app.css` = post-login components (sidebar, cards, tables, modals, grid). All CSS uses `asp-append-version="true"`.
+- **SVG icons**: All icons are inline SVGs (Feather-style).
+- **Passwords in plaintext**: No hashing. Direct string comparison.
+- **`[IgnoreAntiforgeryToken]`** on pages that use AJAX form submits (UserManagement, LaundryShop) instead of using `@Html.AntiForgeryToken()` in forms.
 
 ## Important Notes
 
-- **Git is initialized** (branch: master).
-- **No appsettings connection string**: DB string is in `Program.cs` directly.
-- **No `.cursor/`, `.cursorrules`, or `copilot-instructions.md`** files exist.
-- **No `README.md`** exists.
-- **`DateTime.Now`** is used in `TbUser` default value and `GETDATE()` in DB config — both return local (Beijing) time on the Windows server.
-- **`RegisterModel.OnPost` redirects to `/Login` on success** — the success toast in Register.cshtml (`IsSuccess == true`) never renders because `RedirectToPage` is returned. The toast only renders for failure cases where `Page()` is returned.
-- **`HttpContextAccessor` is registered** (`AddHttpContextAccessor()`) but not currently used in any page models — session is accessed via `HttpContext` property on `PageModel`.
+- **Git**: branch master.
+- **No connection string in appsettings** — hardcoded in `Program.cs`.
+- **No `.cursor/`, `.cursorrules`, or `copilot-instructions.md`** files.
+- **No `README.md`**.
+- **`DateTime.Now`** used in model defaults and seeding — returns local (Beijing) time on Windows server.
+- **`RegisterModel.OnPost` redirects to `/Login`** on success — the success toast in Register.cshtml (`IsSuccess == true`) renders only on non-redirect failure paths (though currently success always redirects).
+- **`HttpContextAccessor` registered** but not used — session accessed via `HttpContext` property on `PageModel`.
+- **`Order.Status` values**: `待取件`, `待清洗`, `洗涤中`, `已完成`, `已送达`.
+- **`LaundryShop.Status` values**: `营业中`, `已停业`.
+- **`Clothing.cshtml` does not exist** — removed from the project.

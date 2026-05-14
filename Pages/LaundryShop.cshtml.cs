@@ -27,7 +27,7 @@ namespace xiaoliran.Pages
         public int TotalPages { get; set; } = 1;
         private const int PageSize = 15;
 
-        public void OnGet(string searchKey = "", string statusFilter = "", int page = 1)
+        public void OnGet(string searchKey = "", string statusFilter = "", int p = 1)
         {
             SearchKey = searchKey;
             StatusFilter = statusFilter;
@@ -37,9 +37,9 @@ namespace xiaoliran.Pages
             if (!string.IsNullOrWhiteSpace(statusFilter))
                 query = query.Where(s => s.Status == statusFilter);
             var totalCount = query.Count();
-            CurrentPage = Math.Max(1, page);
+            CurrentPage = Math.Max(1, p);
             TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize);
-            Shops = query.OrderBy(s => s.Id)
+            Shops = query.OrderByDescending(s => s.CreateTime)
                 .Skip((CurrentPage - 1) * PageSize)
                 .Take(PageSize)
                 .ToList();

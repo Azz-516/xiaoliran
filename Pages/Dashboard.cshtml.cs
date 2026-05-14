@@ -61,7 +61,7 @@ namespace xiaoliran.Pages
             else
             {
                 const int pageSize = 12;
-                CurrentPage = Math.Max(1, int.TryParse(HttpContext.Request.Query["page"], out var p) ? p : 1);
+                CurrentPage = Math.Max(1, int.TryParse(HttpContext.Request.Query["p"], out var p) ? p : 1);
                 TotalPages = (int)Math.Ceiling(_db.LaundryShops.Count() / (double)pageSize);
                 Shops = _db.LaundryShops
                     .OrderBy(s => s.Id)

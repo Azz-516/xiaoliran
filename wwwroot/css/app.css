@@ -178,6 +178,7 @@ body {
 .content-area {
     flex: 1;
     padding: 32px;
+    overflow-y: auto;
 }
 
 /* ---- Dashboard ---- */
@@ -251,7 +252,7 @@ body {
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 64px - 64px);
+    height: 100%;
 }
 
 .card-main-header {
@@ -272,15 +273,23 @@ body {
 
 .card-main-body {
     flex: 1;
-    overflow: auto;
+    overflow-x: auto;
+    overflow-y: visible;
     padding: 16px 20px;
+}
+
+/* ---- Card Footer ---- */
+.card-main-footer {
+    flex-shrink: 0;
+    border-top: 1px solid #f0f2f5;
+    padding: 12px 20px;
 }
 
 /* ---- Data Table ---- */
 .data-table {
     width: 100%;
     border-collapse: collapse;
-    min-width: 600px;
+    table-layout: fixed;
 }
 
 .data-table thead th {
@@ -298,10 +307,21 @@ body {
     font-size: 14px;
     color: #4a5568;
     border-bottom: 1px solid #f7f9fc;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.data-table tbody td:not(:last-child) {
+    white-space: nowrap;
 }
 
 .data-table tbody tr:hover {
     background: #fafbfd;
+}
+
+.data-table th:last-child,
+.data-table td:last-child {
+    text-align: left;
 }
 
 /* ---- Badge ---- */
@@ -559,7 +579,7 @@ body {
 /* ---- Shop Grid ---- */
 .shop-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
     gap: 24px;
     margin-bottom: 32px;
 }

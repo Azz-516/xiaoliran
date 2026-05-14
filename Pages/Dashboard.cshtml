@@ -128,7 +128,9 @@ else
         <div class="pagination">
             @for (var i = 1; i <= Model.TotalPages; i++)
             {
-                <a class="page-link @(i == Model.CurrentPage ? "active" : "")" href="javascript:void(0)" onclick="goDashPage(@i)">@i</a>
+                <a class="page-link @(i == Model.CurrentPage ? "active" : "")"
+                   asp-page="/Dashboard"
+                   asp-route-p="@i">@i</a>
             }
         </div>
     }
@@ -143,14 +145,6 @@ else
     </script>
 }
 
-<script>
-    function goDashPage(p) {
-        var path = window.location.pathname;
-        var params = new URLSearchParams(window.location.search);
-        params.set('page', p);
-        window.location.href = path + '?' + params.toString();
-    }
-</script>
 
 @functions {
     public static string GetOrderBadgeClass(string status)

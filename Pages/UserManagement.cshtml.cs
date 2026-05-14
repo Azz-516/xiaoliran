@@ -24,7 +24,7 @@ namespace xiaoliran.Pages
         public int TotalPages { get; set; } = 1;
         private const int PageSize = 15;
 
-        public void OnGet(string searchKey = "", int page = 1)
+        public void OnGet(string searchKey = "", int p = 1)
         {
             SearchKey = searchKey;
             var query = _db.TbUsers.AsQueryable();
@@ -33,7 +33,7 @@ namespace xiaoliran.Pages
                 query = query.Where(u => u.Username.Contains(searchKey) || u.RealName.Contains(searchKey));
             }
             var totalCount = query.Count();
-            CurrentPage = Math.Max(1, page);
+            CurrentPage = Math.Max(1, p);
             TotalPages = (int)Math.Ceiling(totalCount / (double)PageSize);
             Users = query.OrderByDescending(u => u.CreateTime)
                 .Skip((CurrentPage - 1) * PageSize)
