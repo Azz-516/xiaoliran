@@ -46,8 +46,6 @@ namespace xiaoliran.Pages
                     Status = o.Status,
                     EstimatedCost = o.EstimatedCost,
                     Remark = o.Remark ?? "-",
-                    PickupTime = o.PickupTime.HasValue ? o.PickupTime.Value.ToString("yyyy-MM-dd HH:mm") : "-",
-                    DeliveryTime = o.DeliveryTime.HasValue ? o.DeliveryTime.Value.ToString("yyyy-MM-dd HH:mm") : "-",
                     CreateTime = o.CreateTime.ToString("yyyy-MM-dd HH:mm")
                 }).ToList();
         }
@@ -62,8 +60,6 @@ namespace xiaoliran.Pages
         public string Status { get; set; } = string.Empty;
         public decimal EstimatedCost { get; set; }
         public string Remark { get; set; } = string.Empty;
-        public string PickupTime { get; set; } = string.Empty;
-        public string DeliveryTime { get; set; } = string.Empty;
         public string CreateTime { get; set; } = string.Empty;
     }
 }
