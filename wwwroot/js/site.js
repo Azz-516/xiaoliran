@@ -30,10 +30,14 @@ function showToast(msg, successOrOptions, durationOrOptions) {
 
 // Confirm dialog
 var confirmCallback = null;
-function showConfirmDialog(message, callback) {
+function showConfirmDialog(message, callback, title, confirmText) {
     var dialog = document.getElementById('confirmDialog');
     var msgEl = document.getElementById('confirmMessage');
+    var titleEl = document.getElementById('confirmTitle');
+    var okBtn = document.getElementById('confirmOk');
     if (!dialog || !msgEl) return;
+    if (titleEl) titleEl.textContent = title || '确认删除';
+    if (okBtn) okBtn.textContent = confirmText || '确认删除';
     msgEl.textContent = message;
     dialog.classList.add('show');
     confirmCallback = callback;

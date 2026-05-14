@@ -23,6 +23,7 @@ namespace xiaoliran.Pages
         public int UserCount { get; set; }
         public int ShopCount { get; set; }
         public int PendingOrderCount { get; set; }
+        public int ProcessedOrderCount { get; set; }
         public decimal MonthlyRevenue { get; set; }
         public List<OrderViewModel> RecentOrders { get; set; } = new();
 
@@ -42,6 +43,7 @@ namespace xiaoliran.Pages
                 UserCount = _db.TbUsers.Count();
                 ShopCount = _db.LaundryShops.Count();
                 PendingOrderCount = _db.Orders.Count(o => new[] { "待取件", "待清洗", "洗涤中" }.Contains(o.Status));
+                ProcessedOrderCount = _db.Orders.Count(o => new[] { "已完成", "已送达" }.Contains(o.Status));
                 var now = DateTime.Now;
                 var monthStart = new DateTime(now.Year, now.Month, 1);
                 MonthlyRevenue = _db.Orders

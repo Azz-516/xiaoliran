@@ -42,7 +42,7 @@ Dev server ports come from `Properties/launchSettings.json`: HTTP **5079**, HTTP
 |-------|-------|---------|
 | `TbUser` | `tb_user` | Users (Id, Username, Password, RealName, Gender, Phone, CreateTime) |
 | `Role` | `tb_role` | RBAC roles (Id, RoleKey, RoleName, Description, CreateTime) |
-| `UserRole` | `tb_user_role` | User-Role many-to-many (Id, UserId, RoleId, CreateTime) |
+| `UserRole` | `tb_user_role` | User-Role many-to-many (Id, UserId, RoleId, CreateTime); only one role assigned per user at edit time — `OnPostEdit` removes all existing roles and assigns exactly one |
 | `Permission` | `tb_permission` | Permissions (Id, PermissionKey, PermissionName, Module, CreateTime) |
 | `RolePermission` | `tb_role_permission` | Role-Permission many-to-many (Id, RoleId, PermissionId, CreateTime) |
 | `LaundryShop` | `tb_laundry_shop` | Store locations (Id, Name, Address, ContactPhone, ContactPerson, Status, BusinessHours, Description, CreateTime) |
@@ -122,10 +122,17 @@ Properties/
 - **SVG icons**: All icons are inline SVGs (Feather-style).
 - **Passwords in plaintext**: No hashing. Direct string comparison.
 - **`[IgnoreAntiforgeryToken]`** on pages that use AJAX form submits (UserManagement, LaundryShop, Orders) instead of using `@Html.AntiForgeryToken()` in forms.
-- **Custom confirm dialog**: `site.js` provides `showConfirmDialog(message, callback)` with a `.modal-overlay` confirm dialog (not browser `confirm()`), wired to `#confirmDialog` in `_AppLayout.cshtml`. However, delete buttons in UserManagement, LaundryShop, and Orders **still use native `confirm()`** — they have not been migrated to the custom dialog yet.
+- **Custom confirm dialog**: `site.js` provides `showConfirmDialog(message, callback)` with a `.modal-overlay` confirm dialog (not browser `confirm()`), wired to `#confirmDialog` in `_AppLayout.cshtml`. All delete buttons in UserManagement, LaundryShop, and Orders use this custom dialog via a `confirmDelete()` JS wrapper function.
 - **Duplicate badge helper**: `GetOrderBadgeClass(status)` is defined inline in `@functions` blocks across Dashboard, Orders, and MyOrders cshtml files rather than centralized.
+- **No unique constraint on `TbUser.Username`** in EF configuration (the SQL reference `Sql/Create_tb_user.sql` has one, but `AppDbContext` does not configure it).
+- **Permission check uses `string.Contains()`** (substring match) in `PermissionHelper.CheckPermission` — a permission key like `"manage_users"` would falsely match `"manage_users_admin"`. No delimiter-based matching is used.
+- **Phone validation regex `^1[3-9]\d{9}$` is duplicated** in `RegisterModel.OnPost`, `UserManagementModel.OnPostAdd`, `UserManagementModel.OnPostEdit`, and `/Personal` minimal API endpoint in `Program.cs`.
+- **`BusinessHours` is a single DB string** (`"08:00-20:00"`) but split into two form fields (`BusinessHoursStart` / `BusinessHoursEnd` as `<input type="time">`) with JS `buildBusinessHours()` concatenating them back.
+- **`Dashboard.cshtml.cs` also has `[IgnoreAntiforgeryToken]`** for the "快速下单" order creation modal on the user Dashboard view.
+- **`docs/superpowers/`** contains 4 pairs of design specs and implementation plans (login, RBAC, business models, order system) documenting architectural rationale.
+- **`Nullable` and `ImplicitUsings` enabled** in `xiaoliran.csproj`.
 - **Phone field**: `TbUser.Phone` exists on the model, is part of login session (7th key), and is editable in the profile popup. Registration endpoint accepts optional `Phone` in `RegisterRequest`.
-- **No navigation properties**: All entity relationships are resolved via explicit LINQ joins (`_db.TbUsers.Where(u => u.Id == o.UserId)`) rather than EF navigation properties.
+- **No navigation properties**: All entity relationships are resolved via explicit LINQ joins (`_db.TbUsers.Where(u => u.Id == o.UserId)`) rather than EF navigation properties. This means order list views N+1 the user lookups (each row does a separate query for user name).
 
 ## Important Notes
 
@@ -137,6 +144,7 @@ Properties/
 - **Login session keys** (7 total): UserId, UserName, RealName, Gender, Phone, UserRoles, UserPermissions — all set in `LoginModel.OnPost`.
 - **`RegisterModel.OnPost` redirects to `/Login`** on success — the success toast in Register.cshtml (`IsSuccess == true`) renders only on non-redirect failure paths (though currently success always redirects).
 - **`HttpContextAccessor` registered** but not used — session accessed via `HttpContext` property on `PageModel`.
+- **`Order.ServiceType` values**: `洗衣`, `干洗`, `熨烫`, `洗鞋`.
 - **`Order.Status` values**: `待取件`, `待清洗`, `洗涤中`, `已完成`, `已送达`.
 - **`LaundryShop.Status` values**: `营业中`, `已停业`.
 - **`Clothing.cshtml` does not exist** — removed from the project.
