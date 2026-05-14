@@ -255,7 +255,7 @@
             fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); }).then(function(data) {
                     showToast(data.success ? (data.message || '删除成功') : data.message, data.success);
-                    if (data.success) { location.reload(); }
+                    if (data.success) { setTimeout(function() { location.reload(); }, 2000); }
                 });
         });
     }
