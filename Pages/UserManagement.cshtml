@@ -23,6 +23,7 @@
                     <th>用户名</th>
                     <th>姓名</th>
                     <th>性别</th>
+                    <th>联系方式</th>
                     <th>注册时间</th>
                     <th>操作</th>
                 </tr>
@@ -30,7 +31,7 @@
             <tbody>
                 @if (Model.Users.Count == 0)
                 {
-                    <tr><td colspan="5" style="text-align:center;color:#a0aec0;">暂无用户数据</td></tr>
+                    <tr><td colspan="6" style="text-align:center;color:#a0aec0;">暂无用户数据</td></tr>
                 }
                 else
                 {
@@ -40,10 +41,11 @@
                             <td>@user.Username</td>
                             <td>@user.RealName</td>
                             <td>@user.Gender</td>
+                            <td>@user.Phone</td>
                             <td>@user.CreateTime</td>
                             <td>
                                 <div class="crud-actions">
-                                    <button class="btn-edit" onclick="showEditModal(@user.Id, '@user.Username', '@user.RealName', '@user.Gender')">编辑</button>
+                                    <button class="btn-edit" onclick="showEditModal(@user.Id, '@user.Username', '@user.RealName', '@user.Gender', '@(user.Phone ?? "")')">编辑</button>
                                     <button class="btn-delete" onclick="confirmDelete(@user.Id, '@user.Username')">删除</button>
                                 </div>
                             </td>
@@ -93,6 +95,10 @@
                     <label class="form-radio"><input type="radio" name="Gender" value="女" /> 女</label>
                 </div>
             </div>
+            <div class="form-row">
+                <label>联系方式</label>
+                <input type="text" name="Phone" class="form-input" placeholder="请输入手机号码" />
+            </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary-app" onclick="closeAddModal()">取消</button>
                 <button type="submit" class="btn-primary-app">确认添加</button>
@@ -123,6 +129,10 @@
                 </div>
             </div>
             <div class="form-row">
+                <label>联系方式</label>
+                <input type="text" name="Phone" id="editPhone" class="form-input" placeholder="请输入手机号码" />
+            </div>
+            <div class="form-row">
                 <label>新密码（不修改请留空）</label>
                 <input type="password" name="Password" class="form-input" />
             </div>
@@ -137,10 +147,11 @@
 <script>
     function showAddModal() { document.getElementById('addModal').classList.add('show'); }
     function closeAddModal() { document.getElementById('addModal').classList.remove('show'); document.getElementById('addForm').reset(); }
-    function showEditModal(id, username, realName, gender) {
+    function showEditModal(id, username, realName, gender, phone) {
         document.getElementById('editId').value = id;
         document.getElementById('editUsername').value = username;
         document.getElementById('editRealName').value = realName;
+        document.getElementById('editPhone').value = phone || '';
         document.getElementById('editModal').classList.add('show');
         document.querySelectorAll('#editModal input[name="Gender"]').forEach(function(r) { r.checked = r.value === gender; });
     }
@@ -150,7 +161,7 @@
         var fd = new FormData(this);
         fetch('?handler=Add', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) { return r.json(); }).then(function(data) {
-                if (data.success) { location.reload(); } else { alert(data.message); }
+                if (data.success) { location.reload(); } else { showToast(data.message, false); }
             });
     });
     document.getElementById('editForm').addEventListener('submit', function(e) {
@@ -158,14 +169,14 @@
         var fd = new FormData(this);
         fetch('?handler=Edit', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) { return r.json(); }).then(function(data) {
-                if (data.success) { location.reload(); } else { alert(data.message); }
+                if (data.success) { location.reload(); } else { showToast(data.message, false); }
             });
     });
     function confirmDelete(id, username) {
         if (confirm('确定要删除用户 "' + username + '" 吗？此操作不可恢复。')) {
             fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); }).then(function(data) {
-                    if (data.success) { location.reload(); } else { alert(data.message); }
+                    if (data.success) { location.reload(); } else { showToast(data.message, false); }
                 });
         }
     }

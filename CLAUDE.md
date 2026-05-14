@@ -146,9 +146,25 @@ All existing pagination (Dashboard, UserManagement, LaundryShop) uses `p` as the
 
 ## CSS Layout Pattern
 
-Post-login pages use a fixed-height card layout with internal scrolling:
+**Post-login management pages** (UserManagement, LaundryShop) use a fixed-height card layout with internal scrolling:
 
 - `.content-area { overflow-y: auto; }` — main scroll container (not body)
-- `.card-main { height: 100%; display: flex; flex-direction: column; }` — fills viewport
-- `.card-main-body { flex: 1; overflow-x: auto; }` — scrollable content area
-- `.card-main-footer { flex-shrink: 0; }` — pagination always visible at bottom
+- `.card-main { overflow: visible; display: flex; flex-direction: column; }` — card wrapper
+- `.card-main-header { display: flex; justify-content: space-between; }` — title left, filters right
+- `.card-main-body { padding: 20px; }` — content area (scrolls with page)
+- `.card-main-footer { border-top: 1px solid #f0f2f5; padding: 16px 20px; }` — pagination at bottom
+- `.data-table { width: 100%; border-collapse: collapse; }` — full-width data tables
+- `.data-table td:last-child { text-align: left; }` — action column alignment
+
+**User Dashboard** uses a natural scrolling card grid:
+
+- `.shop-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }` — 3-column layout
+- `.shop-card { display: flex; flex-direction: column; }` — vertical card (no fixed height)
+- `.shop-card-header` / `.shop-card-body` / `.shop-card-footer` — card sections
+
+## User Dashboard Layout
+
+- **PageSize = 9** (3×3 grid per page)
+- **Sort**: `OrderByDescending(s => s.CreateTime)`
+- **Filters**: `searchKey` (name/address) + `statusFilter` (营业中/已停业/全部)
+- **Card structure**: Header (name + status badge) → Body (address, phone, hours, description) → Footer (action button)

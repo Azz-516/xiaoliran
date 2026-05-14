@@ -44,7 +44,8 @@ namespace xiaoliran.Pages
                     Username = u.Username,
                     RealName = u.RealName,
                     Gender = u.Gender,
-                    CreateTime = u.CreateTime.ToString("yyyy-MM-dd HH:mm")
+                    CreateTime = u.CreateTime.ToString("yyyy-MM-dd HH:mm"),
+                    Phone = u.Phone ?? ""
                 }).ToList();
         }
 
@@ -56,13 +57,19 @@ namespace xiaoliran.Pages
                 var password = Request.Form["Password"].ToString();
                 var realName = Request.Form["RealName"].ToString();
                 var gender = Request.Form["Gender"].ToString();
+                var phone = Request.Form["Phone"].ToString();
 
                 if (await _db.TbUsers.AnyAsync(u => u.Username == username))
                 {
                     return new JsonResult(new { success = false, message = "用户名已存在" });
                 }
 
-                var user = new TbUser { Username = username, Password = password, RealName = realName, Gender = gender };
+                if (!string.IsNullOrEmpty(phone) && !System.Text.RegularExpressions.Regex.IsMatch(phone, @"^1[3-9]\d{9}$"))
+                {
+                    return new JsonResult(new { success = false, message = "请输入合法的手机号码" });
+                }
+
+                var user = new TbUser { Username = username, Password = password, RealName = realName, Gender = gender, Phone = phone };
                 _db.TbUsers.Add(user);
                 await _db.SaveChangesAsync();
 
@@ -88,6 +95,7 @@ namespace xiaoliran.Pages
                 var id = int.Parse(Request.Form["Id"].ToString());
                 var realName = Request.Form["RealName"].ToString();
                 var gender = Request.Form["Gender"].ToString();
+                var phone = Request.Form["Phone"].ToString();
                 var password = Request.Form["Password"].ToString();
 
                 var user = await _db.TbUsers.FindAsync(id);
@@ -95,6 +103,11 @@ namespace xiaoliran.Pages
 
                 user.RealName = realName;
                 user.Gender = gender;
+                if (!string.IsNullOrEmpty(phone) && !System.Text.RegularExpressions.Regex.IsMatch(phone, @"^1[3-9]\d{9}$"))
+                {
+                    return new JsonResult(new { success = false, message = "请输入合法的手机号码" });
+                }
+                user.Phone = phone;
                 if (!string.IsNullOrWhiteSpace(password)) user.Password = password;
 
                 await _db.SaveChangesAsync();
@@ -133,6 +146,7 @@ namespace xiaoliran.Pages
         public string Username { get; set; } = string.Empty;
         public string RealName { get; set; } = string.Empty;
         public string Gender { get; set; } = string.Empty;
+        public string Phone { get; set; } = string.Empty;
         public string CreateTime { get; set; } = string.Empty;
     }
 }

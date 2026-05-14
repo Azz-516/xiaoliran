@@ -70,6 +70,7 @@ namespace xiaoliran
                         var form = await httpContext.Request.ReadFormAsync();
                         var realName = form["RealName"].ToString();
                         var gender = form["Gender"].ToString();
+                        var phone = form["Phone"].ToString();
                         var password = form["Password"].ToString();
 
                         var user = await db.TbUsers.FirstOrDefaultAsync(u => u.Id == int.Parse(userId));
@@ -80,6 +81,11 @@ namespace xiaoliran
 
                         user.RealName = realName;
                         user.Gender = gender;
+                        if (!string.IsNullOrEmpty(phone) && !System.Text.RegularExpressions.Regex.IsMatch(phone, @"^1[3-9]\d{9}$"))
+                        {
+                            return Results.Json(new { success = false, message = "请输入合法的手机号码" });
+                        }
+                        user.Phone = phone;
                         if (!string.IsNullOrWhiteSpace(password))
                         {
                             user.Password = password;
@@ -89,6 +95,7 @@ namespace xiaoliran
 
                         httpContext.Session.SetString("RealName", realName);
                         httpContext.Session.SetString("Gender", gender);
+                        httpContext.Session.SetString("Phone", phone);
 
                         var initial = realName.Length > 0 ? realName.Substring(0, 1) : "?";
 
@@ -121,7 +128,8 @@ namespace xiaoliran
                             Username = request.Username,
                             Password = request.Password,
                             RealName = request.RealName,
-                            Gender = request.Gender
+                            Gender = request.Gender,
+                            Phone = request.Phone ?? ""
                         };
 
                         db.TbUsers.Add(user);
@@ -210,6 +218,7 @@ namespace xiaoliran
                             Password = "123456",
                             RealName = n + i,
                             Gender = i % 2 == 0 ? "男" : "女",
+                            Phone = $"138{((i * 1234567).ToString().PadLeft(8, '0').Substring(0, 8))}",
                             CreateTime = DateTime.Now.AddDays(-i)
                         });
                     }
@@ -253,5 +262,5 @@ namespace xiaoliran
         }
     }
 
-    public record RegisterRequest(string Username, string Password, string RealName, string Gender);
+    public record RegisterRequest(string Username, string Password, string RealName, string Gender, string Phone);
 }

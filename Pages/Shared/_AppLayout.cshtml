@@ -4,6 +4,7 @@
     var userGender = Context.Session.GetString("Gender") ?? "男";
     var userPermissions = Context.Session.GetString("UserPermissions") ?? "";
     var userRoles = Context.Session.GetString("UserRoles") ?? "";
+    var phone = Context.Session.GetString("Phone") ?? "";
     var initial = userRealName.Length > 0 ? userRealName.Substring(0, 1) : "?";
 }
 <!DOCTYPE html>
@@ -48,6 +49,12 @@
                             <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
                         </svg>
                         <span>门店管理</span>
+                    </a>
+                    <a class="nav-item @(Context.Request.Path == "/Orders" ? "active" : "")" asp-page="/Orders">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="20" height="20">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        <span>订单管理</span>
                     </a>
                 }
                 @if (userRoles.Contains("user"))
@@ -107,6 +114,10 @@
                                         </div>
                                     </div>
                                     <div class="form-row">
+                                        <label>联系方式</label>
+                                        <input type="text" name="Phone" class="form-input" id="popupPhone" value="@phone" placeholder="请输入手机号码" />
+                                    </div>
+                                    <div class="form-row">
                                         <label>密码</label>
                                         <input type="password" name="Password" placeholder="不修改请留空" class="form-input" id="popupPassword" />
                                     </div>
@@ -127,6 +138,33 @@
     <script src="~/js/site.js" asp-append-version="true"></script>
     <div id="appToast" class="app-toast" style="display:none;"></div>
     <script>
+        function showToast(msg, successOrOptions, durationOrOptions) {
+            var toast = document.getElementById('appToast');
+            toast.textContent = msg;
+            toast.style.display = '';
+            toast.className = 'app-toast show';
+
+            var options = {};
+            if (typeof successOrOptions === 'object') {
+                options = successOrOptions;
+            } else {
+                options.success = successOrOptions !== false;
+            }
+            var duration = (typeof durationOrOptions === 'number') ? durationOrOptions : (typeof options === 'object' && typeof options.duration === 'number' ? options.duration : 3000);
+            var success = options.success !== false;
+            var type = options.type || (success ? 'success' : 'error');
+
+            toast.classList.add('show');
+            if (type === 'success') toast.classList.add('app-toast-success');
+            else if (type === 'error') toast.classList.add('app-toast-error');
+            else if (type === 'info') toast.classList.add('app-toast-info');
+            else if (type === 'warning') toast.classList.add('app-toast-warning');
+
+            setTimeout(function() {
+                toast.className = 'app-toast';
+                setTimeout(function() { toast.style.display = 'none'; }, 300);
+            }, duration);
+        }
         // Profile popup toggle
         document.getElementById('userAvatarBtn').addEventListener('click', function() {
             var popup = document.getElementById('profilePopup');

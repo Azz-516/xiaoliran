@@ -19,6 +19,9 @@ namespace xiaoliran.Models
         [MaxLength(10)]
         public string Gender { get; set; } = "男";
 
+        [MaxLength(20)]
+        public string Phone { get; set; } = string.Empty;
+
         public DateTime CreateTime { get; set; } = DateTime.Now;
     }
 }

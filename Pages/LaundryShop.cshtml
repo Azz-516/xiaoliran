@@ -114,8 +114,12 @@
                 <input type="text" name="ContactPerson" class="form-input" />
             </div>
             <div class="form-row">
-                <label>营业时间</label>
-                <input type="text" name="BusinessHours" class="form-input" placeholder="例：08:00-20:00" />
+                <label>开始营业时间</label>
+                <input type="time" name="BusinessHoursStart" id="addBusinessHoursStart" class="form-input" />
+            </div>
+            <div class="form-row">
+                <label>结束营业时间</label>
+                <input type="time" name="BusinessHoursEnd" id="addBusinessHoursEnd" class="form-input" />
             </div>
             <div class="form-row">
                 <label>状态</label>
@@ -159,8 +163,12 @@
                 <input type="text" name="ContactPerson" id="editContactPerson" class="form-input" />
             </div>
             <div class="form-row">
-                <label>营业时间</label>
-                <input type="text" name="BusinessHours" id="editBusinessHours" class="form-input" />
+                <label>开始营业时间</label>
+                <input type="time" name="BusinessHoursStart" id="editBusinessHoursStart" class="form-input" />
+            </div>
+            <div class="form-row">
+                <label>结束营业时间</label>
+                <input type="time" name="BusinessHoursEnd" id="editBusinessHoursEnd" class="form-input" />
             </div>
             <div class="form-row">
                 <label>状态</label>
@@ -190,33 +198,60 @@
         document.getElementById('editAddress').value = address;
         document.getElementById('editContactPhone').value = phone;
         document.getElementById('editContactPerson').value = contact;
-        document.getElementById('editBusinessHours').value = hours;
+        if (hours) {
+            var parts = hours.split('-');
+            document.getElementById('editBusinessHoursStart').value = parts[0] || '';
+            document.getElementById('editBusinessHoursEnd').value = parts[1] || '';
+        }
         document.getElementById('editDescription').value = description || '';
         document.getElementById('editModal').classList.add('show');
         document.querySelectorAll('#editModal input[name="Status"]').forEach(function(r) { r.checked = r.value === status; });
     }
     function closeEditModal() { document.getElementById('editModal').classList.remove('show'); }
+    function validateTime(startId, endId) {
+        var start = document.getElementById(startId).value;
+        var end = document.getElementById(endId).value;
+        if (start && end && start >= end) {
+            showToast('结束时间必须大于开始时间', false);
+            return false;
+        }
+        return true;
+    }
+    function buildBusinessHours(startId, endId) {
+        var start = document.getElementById(startId).value;
+        var end = document.getElementById(endId).value;
+        if (start && end) return start + '-' + end;
+        return start || end || '';
+    }
     document.getElementById('addForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        if (!validateTime('addBusinessHoursStart', 'addBusinessHoursEnd')) return;
         var fd = new FormData(this);
+        fd.set('BusinessHours', buildBusinessHours('addBusinessHoursStart', 'addBusinessHoursEnd'));
+        fd.delete('BusinessHoursStart');
+        fd.delete('BusinessHoursEnd');
         fetch('?handler=Add', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) { return r.json(); }).then(function(data) {
-                if (data.success) { location.reload(); } else { alert(data.message); }
+                if (data.success) { location.reload(); } else { showToast(data.message, false); }
             });
     });
     document.getElementById('editForm').addEventListener('submit', function(e) {
         e.preventDefault();
+        if (!validateTime('editBusinessHoursStart', 'editBusinessHoursEnd')) return;
         var fd = new FormData(this);
+        fd.set('BusinessHours', buildBusinessHours('editBusinessHoursStart', 'editBusinessHoursEnd'));
+        fd.delete('BusinessHoursStart');
+        fd.delete('BusinessHoursEnd');
         fetch('?handler=Edit', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
             .then(function(r) { return r.json(); }).then(function(data) {
-                if (data.success) { location.reload(); } else { alert(data.message); }
+                if (data.success) { location.reload(); } else { showToast(data.message, false); }
             });
     });
     function confirmDelete(id, name) {
         if (confirm('确定要删除门店 "' + name + '" 吗？此操作不可恢复。')) {
             fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
                 .then(function(r) { return r.json(); }).then(function(data) {
-                    if (data.success) { location.reload(); } else { alert(data.message); }
+                    if (data.success) { location.reload(); } else { showToast(data.message, false); }
                 });
         }
     }

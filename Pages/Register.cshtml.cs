@@ -27,6 +27,9 @@ namespace xiaoliran.Pages
         [BindProperty]
         public string Gender { get; set; } = "男";
 
+        [BindProperty]
+        public string Phone { get; set; } = string.Empty;
+
         public string Message { get; set; } = string.Empty;
         public bool IsSuccess { get; set; }
 
@@ -43,6 +46,13 @@ namespace xiaoliran.Pages
                 return Page();
             }
 
+            if (!string.IsNullOrEmpty(Phone) && !System.Text.RegularExpressions.Regex.IsMatch(Phone, @"^1[3-9]\d{9}$"))
+            {
+                Message = "请输入合法的手机号码";
+                IsSuccess = false;
+                return Page();
+            }
+
             if (await _db.TbUsers.AnyAsync(u => u.Username == Username))
             {
                 Message = "用户名已存在";
@@ -55,7 +65,8 @@ namespace xiaoliran.Pages
                 Username = Username,
                 Password = Password,
                 RealName = RealName,
-                Gender = Gender
+                Gender = Gender,
+                Phone = Phone
             };
 
             _db.TbUsers.Add(user);

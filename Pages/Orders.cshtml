@@ -1,0 +1,204 @@
+@page
+@model xiaoliran.Pages.OrdersModel
+@{
+    ViewData["Title"] = "订单管理";
+    Layout = "/Pages/Shared/_AppLayout.cshtml";
+}
+
+<div class="card-main">
+    <div class="card-main-header">
+        <h3>订单列表</h3>
+        <div style="display:flex;gap:12px;align-items:center;">
+            <form method="get" style="display:flex;gap:8px;">
+                <input type="text" name="searchKey" value="@Model.SearchKey" placeholder="搜索订单号" class="form-input" style="width:180px;" />
+                <select name="statusFilter" class="form-input" style="width:120px;">
+                    <option value="">全部状态</option>
+                    @if (Model.StatusFilter == "待取件")
+                    {
+                        <option value="待取件" selected>待取件</option>
+                        <option value="待清洗">待清洗</option>
+                        <option value="洗涤中">洗涤中</option>
+                        <option value="已完成">已完成</option>
+                        <option value="已送达">已送达</option>
+                    }
+                    else if (Model.StatusFilter == "待清洗")
+                    {
+                        <option value="待取件">待取件</option>
+                        <option value="待清洗" selected>待清洗</option>
+                        <option value="洗涤中">洗涤中</option>
+                        <option value="已完成">已完成</option>
+                        <option value="已送达">已送达</option>
+                    }
+                    else if (Model.StatusFilter == "洗涤中")
+                    {
+                        <option value="待取件">待取件</option>
+                        <option value="待清洗">待清洗</option>
+                        <option value="洗涤中" selected>洗涤中</option>
+                        <option value="已完成">已完成</option>
+                        <option value="已送达">已送达</option>
+                    }
+                    else if (Model.StatusFilter == "已完成")
+                    {
+                        <option value="待取件">待取件</option>
+                        <option value="待清洗">待清洗</option>
+                        <option value="洗涤中">洗涤中</option>
+                        <option value="已完成" selected>已完成</option>
+                        <option value="已送达">已送达</option>
+                    }
+                    else if (Model.StatusFilter == "已送达")
+                    {
+                        <option value="待取件">待取件</option>
+                        <option value="待清洗">待清洗</option>
+                        <option value="洗涤中">洗涤中</option>
+                        <option value="已完成">已完成</option>
+                        <option value="已送达" selected>已送达</option>
+                    }
+                    else
+                    {
+                        <option value="待取件">待取件</option>
+                        <option value="待清洗">待清洗</option>
+                        <option value="洗涤中">洗涤中</option>
+                        <option value="已完成">已完成</option>
+                        <option value="已送达">已送达</option>
+                    }
+                </select>
+                <button type="submit" class="btn-primary-app">搜索</button>
+            </form>
+        </div>
+    </div>
+    <div class="card-main-body">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>订单号</th>
+                    <th>用户</th>
+                    <th>门店</th>
+                    <th>服务类型</th>
+                    <th>衣物类型</th>
+                    <th>费用</th>
+                    <th>状态</th>
+                    <th>下单时间</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model.Orders.Count == 0)
+                {
+                    <tr><td colspan="9" style="text-align:center;color:#a0aec0;">暂无订单数据</td></tr>
+                }
+                else
+                {
+                    @foreach (var order in Model.Orders)
+                    {
+                        <tr>
+                            <td>@order.OrderNo</td>
+                            <td>@order.UserName</td>
+                            <td>@order.ShopName</td>
+                            <td>@order.ServiceType</td>
+                            <td>@order.ClothingType</td>
+                            <td>¥@order.EstimatedCost.ToString("F2")</td>
+                            <td><span class="badge-status @(GetOrderBadgeClass(order.Status))">@order.Status</span></td>
+                            <td>@order.CreateTime</td>
+                            <td>
+                                <div class="crud-actions">
+                                    <button class="btn-edit" onclick="showStatusModal(@order.Id, '@order.OrderNo', '@order.Status')">修改状态</button>
+                                    <button class="btn-delete" onclick="confirmDelete(@order.Id, '@order.OrderNo')">删除</button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+    <div class="card-main-footer">
+        @if (Model.TotalPages > 1)
+        {
+            <div class="pagination">
+                @for (var i = 1; i <= Model.TotalPages; i++)
+                {
+                    <a class="page-link @(i == Model.CurrentPage ? "active" : "")"
+                       asp-page="/Orders"
+                       asp-route-p="@i"
+                       asp-route-searchKey="@Model.SearchKey"
+                       asp-route-statusFilter="@Model.StatusFilter">@i</a>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Status Modal -->
+<div class="modal-overlay" id="statusModal">
+    <div class="modal-content">
+        <h3>修改订单状态</h3>
+        <form id="statusForm">
+            <input type="hidden" name="Id" id="statusOrderId" />
+            <div class="form-row">
+                <label>订单号</label>
+                <input type="text" id="statusOrderNo" class="form-readonly" readonly />
+            </div>
+            <div class="form-row">
+                <label>当前状态</label>
+                <input type="text" id="statusCurrent" class="form-readonly" readonly />
+            </div>
+            <div class="form-row">
+                <label>新状态</label>
+                <select name="Status" class="form-input" id="statusNew">
+                    <option value="待取件">待取件</option>
+                    <option value="待清洗">待清洗</option>
+                    <option value="洗涤中">洗涤中</option>
+                    <option value="已完成">已完成</option>
+                    <option value="已送达">已送达</option>
+                </select>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn-secondary-app" onclick="closeStatusModal()">取消</button>
+                <button type="submit" class="btn-primary-app">保存</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function showStatusModal(id, orderNo, status) {
+        document.getElementById('statusOrderId').value = id;
+        document.getElementById('statusOrderNo').value = orderNo;
+        document.getElementById('statusCurrent').value = status;
+        document.getElementById('statusNew').value = status;
+        document.getElementById('statusModal').classList.add('show');
+    }
+    function closeStatusModal() { document.getElementById('statusModal').classList.remove('show'); }
+    document.getElementById('statusForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var fd = new FormData(this);
+        fetch('?handler=EditStatus', { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); }).then(function(data) {
+                if (data.success) { location.reload(); } else { showToast(data.message, false); }
+            });
+    });
+    function confirmDelete(id, orderNo) {
+        if (confirm('确定要删除订单 "' + orderNo + '" 吗？此操作不可恢复。')) {
+            fetch('?handler=Delete&id=' + id, { method: 'POST', headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.json(); }).then(function(data) {
+                    if (data.success) { location.reload(); } else { showToast(data.message, false); }
+                });
+        }
+    }
+    document.getElementById('statusModal').addEventListener('click', function(e) { if (e.target === this) closeStatusModal(); });
+</script>
+
+@functions {
+    public static string GetOrderBadgeClass(string status)
+    {
+        return status switch
+        {
+            "待取件" => "pending",
+            "待清洗" => "washing",
+            "洗涤中" => "washing",
+            "已完成" => "done",
+            "已送达" => "delivered",
+            _ => "pending"
+        };
+    }
+}

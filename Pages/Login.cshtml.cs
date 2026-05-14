@@ -53,6 +53,7 @@ namespace xiaoliran.Pages
                     HttpContext.Session.SetString("UserName", user.Username);
                     HttpContext.Session.SetString("RealName", user.RealName);
                     HttpContext.Session.SetString("Gender", user.Gender);
+                    HttpContext.Session.SetString("Phone", user.Phone ?? "");
                     HttpContext.Session.SetString("UserRoles", string.Join(",", roleKeys));
                     HttpContext.Session.SetString("UserPermissions", string.Join(",", permissionKeys));
                     return RedirectToPage("/Dashboard");
