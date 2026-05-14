@@ -229,12 +229,12 @@ else
                 <div class="order-unsupported-msg">此服务不支持此类衣物</div>
             </div>
             <div class="form-row">
-                <label>备注</label>
-                <textarea name="Remark" class="form-input" rows="2" placeholder="选填"></textarea>
-            </div>
-            <div class="form-row">
                 <label>取件时间</label>
                 <input type="datetime-local" name="PickupTime" class="form-input" />
+            </div>
+            <div class="form-row">
+                <label>备注</label>
+                <textarea name="Remark" class="form-input" rows="2" placeholder="选填"></textarea>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn-secondary-app" onclick="closeOrderModal()">取消</button>
@@ -282,9 +282,9 @@ else
     }
 
     function showOrderModal(shopId, shopName) {
+        document.getElementById('orderForm').reset();
         document.getElementById('orderShopId').value = shopId;
         document.getElementById('orderShopName').value = shopName;
-        document.getElementById('orderForm').reset();
         document.getElementById('orderQuantity').value = '1';
         calcEstimatedCost();
         document.getElementById('orderModal').classList.add('show');
