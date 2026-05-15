@@ -54,8 +54,7 @@ namespace xiaoliran
                 app.UseSession();
                 app.UseAuthorization();
 
-                app.MapStaticAssets();
-                app.MapRazorPages().WithStaticAssets();
+                app.MapRazorPages();
 
                 app.MapPost("/Personal", async (HttpContext httpContext, AppDbContext db) =>
                 {
